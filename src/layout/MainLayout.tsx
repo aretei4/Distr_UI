@@ -1,18 +1,34 @@
-import React from 'react';
-import Navbar from '../components/Navbar';
+import React from "react";
+import { Outlet, Link, useNavigate } from "react-router-dom";
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
+const MainLayout: React.FC = () => {
+  const navigate = useNavigate();
 
-const MainLayout: React.FC<LayoutProps> = ({ children }) => {
+  const handleLogout = () => {
+    localStorage.removeItem("loggedIn");
+    navigate("/");
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-1 p-6 bg-gray-50">{children}</main>
-      <footer className="text-center p-4 bg-gray-200 text-sm">
-        © {new Date().getFullYear()} My React App
-      </footer>
+      <header className="bg-blue-600 text-white p-4 flex justify-between">
+        <nav className="space-x-4">
+          <Link to="/home">Home</Link>
+          <Link to="/sales">Sales</Link>
+          <Link to="/upload">Upload</Link>
+          <Link to="/about">About</Link>
+        </nav>
+        <button
+          onClick={handleLogout}
+          className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded"
+        >
+          Logout
+        </button>
+      </header>
+
+      <main className="flex-1 p-4 bg-gray-50">
+        <Outlet /> {/* Renders the active page */}
+      </main>
     </div>
   );
 };
