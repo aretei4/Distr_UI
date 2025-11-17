@@ -5,10 +5,13 @@ import MainLayout from "./layout/MainLayout";
 
 const Login = lazy(() => import("./pages/LoginPage"));
 const Home = lazy(() => import("./pages/Home"));
-const About = lazy(() => import("./pages/About"));
+const About = lazy(() => import("./pages/SalesAndDelivery"));
 const Upload = lazy(() => import("./pages/Upload"));
 const SalesTable = lazy(() => import("./pages/SalesTable"));
 const SalesDetail = lazy(() => import("./pages/SalesDetail"));
+const DeliveryAgents = lazy(() => import("./pages/DeliveryAgents"));
+const DeliveryTable = lazy(() => import("./pages/DeliveryTable"));
+const DeliveryList = lazy(() => import("./pages/DeliveryPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const App: React.FC = () => {
@@ -29,6 +32,9 @@ const App: React.FC = () => {
             <Route path="/upload" element={<Upload />} />
             <Route path="/sales" element={<SalesTable />} />
             <Route path="/sales/:picklistNo" element={<SalesDetail />} />
+			<Route path="/agents" element={<DeliveryAgents />} />
+			<Route path="/agents/:agentId" element={<DeliveryTable />} /> {/* ✅ updated */}
+			<Route path="/delivery" element={<DeliveryList />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         ) : (

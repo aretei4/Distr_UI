@@ -16,7 +16,8 @@ const MainLayout: React.FC = () => {
           <Link to="/home">Home</Link>
           <Link to="/sales">Sales</Link>
           <Link to="/upload">Upload</Link>
-          <Link to="/about">About</Link>
+          <Link to="/agents">About</Link>
+		  <Link to="/delivery">delivery</Link>
         </nav>
         <button
           onClick={handleLogout}

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { ApiEndpoints, AppConfig } from "../constants/config";
 import { useNavigate } from "react-router-dom";
 
 interface SalesEntry {
@@ -26,7 +27,7 @@ const SalesTable: React.FC = () => {
 
   // Fetch data from backend
   useEffect(() => {
- fetch("http://localhost:8080/api/sales?Picklist_No=E587P22657")
+ fetch(ApiEndpoints.SALES)
       .then((res) => res.json())
       .then((data) => {
         setSales(data);

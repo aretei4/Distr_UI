@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { ApiEndpoints } from "../constants/config";
 
 interface SalesEntry {
   picklistNo: string;
@@ -12,7 +13,6 @@ interface CarDetails {
   carNo: string;
   driverName: string;
   mobile: string;
-  deliveryBoy: string;
 }
 
 interface DeliveryBoy {
@@ -31,19 +31,22 @@ const SelectedSales: React.FC = () => {
     carNo: "",
     driverName: "",
     mobile: "",
-    deliveryBoy: "",
   });
   const [deliveryList, setDeliveryList] = useState<DeliveryBoy[]>([]);
   const [filteredDelivery, setFilteredDelivery] = useState<DeliveryBoy[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [deliveryQuery, setDeliveryQuery] = useState(""); // text user types
+  const [deliveryBoyId, setDeliveryBoyId] = useState<number | null>(null);
 
-  // Load delivery boy list (from API or mock data)
+  // load delivery boys (API fallback to mock)
   useEffect(() => {
-    fetch("/api/delivery-boys")
-      .then((res) => res.json())
+    fetch(ApiEndpoints.AGENTS)
+      .then((res) => {
+        if (!res.ok) throw new Error("Network response not ok");
+        return res.json();
+      })
       .then((data) => setDeliveryList(data))
       .catch(() => {
-        // fallback data
         setDeliveryList([
           { id: 1, name: "SANTOSH MUDULI", phone: "9876543210" },
           { id: 2, name: "RAJESH KUMAR", phone: "9876500000" },
@@ -53,9 +56,9 @@ const SelectedSales: React.FC = () => {
       });
   }, []);
 
-  // Filter delivery boys as user types
+  // filter delivery suggestions as user types
   useEffect(() => {
-    const q = car.deliveryBoy.toLowerCase();
+    const q = deliveryQuery.trim().toLowerCase();
     if (q.length === 0) {
       setFilteredDelivery([]);
       return;
@@ -63,41 +66,69 @@ const SelectedSales: React.FC = () => {
     setFilteredDelivery(
       deliveryList.filter((d) => d.name.toLowerCase().includes(q))
     );
-  }, [car.deliveryBoy, deliveryList]);
+  }, [deliveryQuery, deliveryList]);
 
   const handleCarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setCar({ ...car, [name]: value });
+    setCar((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSelectDelivery = (name: string) => {
-    setCar({ ...car, deliveryBoy: name });
+  // when a suggestion is clicked, set both id and display text
+  const handleSelectDelivery = (id: number, name: string) => {
+    setDeliveryBoyId(id);
+    setDeliveryQuery(name);
     setShowSuggestions(false);
   };
 
-  const handleSubmit = () => {
-    if (!car.carNo || !car.driverName || !car.mobile || !car.deliveryBoy) {
-      alert("Please fill in all car and delivery details before submitting.");
+  // prepare picklist array
+  const picklistNos = useMemo(() => selected.map((s) => s.picklistNo), [selected]);
+
+  // submit payload: deliveryBoyId + picklistNos + car details
+  const handleSubmit = async () => {
+    if (!deliveryBoyId) {
+      alert("Please select a delivery boy from suggestions.");
+      return;
+    }
+    if (picklistNos.length === 0) {
+      alert("No picklists selected.");
+      return;
+    }
+    if (!car.carNo.trim() || !car.driverName.trim() || !car.mobile.trim()) {
+      alert("Please fill car number, driver name and mobile.");
       return;
     }
 
     const payload = {
-      carDetails: car,
-      selectedRecords: selected,
+      deliveryBoyId,
+      picklistNos,
+      car: {
+        carNo: car.carNo.trim(),
+        driverName: car.driverName.trim(),
+        mobile: car.mobile.trim(),
+      },
     };
+console.log(JSON.stringify(payload));
+    try {
+      const res = await fetch(`${ApiEndpoints.SALES}/assign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    console.log("Submitting data:", payload);
-    alert("✅ Data ready to send:\n" + JSON.stringify(payload, null, 2));
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(text || "Server returned error");
+      }
 
-    // Example for API call:
-    // fetch("http://localhost:8080/api/dispatch", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify(payload),
-    // });
+      alert("✅ Delivery assignment successful.");
+      navigate("/agents"); // or wherever appropriate
+    } catch (err) {
+      console.error("Assign error:", err);
+      alert("❌ Failed to assign delivery. See console for details.");
+    }
   };
 
-  // Search in selected records
+  // client-side search on selected records
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     return selected.filter(
@@ -117,97 +148,92 @@ const SelectedSales: React.FC = () => {
         >
           ← Back
         </button>
-        <h1 className="text-2xl font-semibold text-gray-800">
-          Selected Records
-        </h1>
+        <h1 className="text-2xl font-semibold text-gray-800">Selected Records</h1>
       </div>
 
-      {/* Car + Delivery Details Form */}
+      {/* Car + Delivery Details */}
       <div className="bg-white p-4 rounded-lg shadow-md space-y-3">
-        <h2 className="text-lg font-semibold text-gray-700 mb-2">
-          🚚 Car & Delivery Details
-        </h2>
+        <h2 className="text-lg font-semibold text-gray-700 mb-2">🚚 Delivery Assignment</h2>
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm text-gray-600 mb-1">Car No</label>
             <input
-              type="text"
               name="carNo"
-              placeholder="Enter car number"
               value={car.carNo}
               onChange={handleCarChange}
-              className="border p-2 w-full rounded focus:ring focus:ring-blue-200"
+              className="border p-2 w-full rounded"
+              placeholder="e.g. OD02AB1234"
             />
           </div>
+
           <div>
-            <label className="block text-sm text-gray-600 mb-1">
-              Driver Name
-            </label>
+            <label className="block text-sm text-gray-600 mb-1">Driver Name</label>
             <input
-              type="text"
               name="driverName"
-              placeholder="Enter driver name"
               value={car.driverName}
               onChange={handleCarChange}
-              className="border p-2 w-full rounded focus:ring focus:ring-blue-200"
+              className="border p-2 w-full rounded"
+              placeholder="Driver name"
             />
           </div>
+
           <div className="relative">
-            <label className="block text-sm text-gray-600 mb-1">
-              Delivery Boy
-            </label>
+            <label className="block text-sm text-gray-600 mb-1">Delivery Boy</label>
             <input
               type="text"
               name="deliveryBoy"
-              placeholder="Type delivery boy name..."
-              value={car.deliveryBoy}
+              value={deliveryQuery}
               onChange={(e) => {
-                handleCarChange(e);
+                setDeliveryQuery(e.target.value);
                 setShowSuggestions(true);
+                setDeliveryBoyId(null); // clear id until user picks suggestion
               }}
-              className="border p-2 w-full rounded focus:ring focus:ring-blue-200"
+              className="border p-2 w-full rounded"
+              placeholder="Type and select delivery boy"
+              autoComplete="off"
             />
+
             {showSuggestions && filteredDelivery.length > 0 && (
-              <ul className="absolute z-10 bg-white border rounded-md w-full mt-1 shadow-lg max-h-40 overflow-y-auto">
+              <ul className="absolute z-10 bg-white border rounded-md w-full mt-1 shadow-lg max-h-44 overflow-y-auto">
                 {filteredDelivery.map((d) => (
                   <li
                     key={d.id}
-                    onClick={() => handleSelectDelivery(d.name)}
+                    onClick={() => handleSelectDelivery(d.id, d.name)}
                     className="p-2 hover:bg-blue-100 cursor-pointer"
                   >
-                    {d.name} — <span className="text-gray-500">{d.phone}</span>
+                    {d.name} <span className="text-gray-500">({d.phone})</span>
                   </li>
                 ))}
               </ul>
             )}
           </div>
+
           <div>
             <label className="block text-sm text-gray-600 mb-1">Mobile</label>
             <input
-              type="text"
               name="mobile"
-              placeholder="Enter mobile number"
               value={car.mobile}
               onChange={handleCarChange}
-              className="border p-2 w-full rounded focus:ring focus:ring-blue-200"
+              className="border p-2 w-full rounded"
+              placeholder="Driver / delivery mobile (optional)"
             />
           </div>
         </div>
       </div>
 
-      {/* Search + Table */}
+      {/* Search + table */}
       <div className="bg-white p-4 rounded-lg shadow-md">
         <div className="flex justify-between items-center mb-4">
           <input
-            type="text"
-            placeholder="🔍 Search selected by Customer, Picklist, or Sales Rep"
-            className="border p-2 rounded-md w-full md:w-1/2 shadow-sm focus:ring focus:ring-blue-200"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            placeholder="🔍 Search Customer, Picklist, or Sales Rep"
+            className="border p-2 rounded-md w-full md:w-1/2"
           />
           <button
             onClick={handleSubmit}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow ml-4"
+            className="bg-blue-600 text-white px-4 py-2 rounded ml-4"
           >
             Submit Dispatch
           </button>
@@ -226,22 +252,15 @@ const SelectedSales: React.FC = () => {
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="text-center p-4 text-gray-500">
-                    No records found.
-                  </td>
+                  <td colSpan={4} className="text-center p-4 text-gray-500">No records found.</td>
                 </tr>
               ) : (
                 filtered.map((item) => (
-                  <tr
-                    key={item.picklistNo}
-                    className="border-t hover:bg-gray-50 transition"
-                  >
+                  <tr key={item.picklistNo} className="border-t hover:bg-gray-50 transition">
                     <td className="p-2 border">{item.picklistNo}</td>
                     <td className="p-2 border">{item.custDesc}</td>
                     <td className="p-2 border">{item.salesRepName}</td>
-                    <td className="p-2 border text-right">
-                      ₹{item.netValue.toLocaleString("en-IN")}
-                    </td>
+                    <td className="p-2 border text-right">₹{item.netValue.toLocaleString("en-IN")}</td>
                   </tr>
                 ))
               )}
@@ -249,8 +268,6 @@ const SelectedSales: React.FC = () => {
           </table>
         </div>
       </div>
-
- 
     </div>
   );
 };
