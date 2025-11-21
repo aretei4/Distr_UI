@@ -5,7 +5,6 @@ import MainLayout from "./layout/MainLayout";
 
 const Login = lazy(() => import("./pages/LoginPage"));
 const Home = lazy(() => import("./pages/Home"));
-const About = lazy(() => import("./pages/SalesAndDelivery"));
 const Upload = lazy(() => import("./pages/Upload"));
 const SalesTable = lazy(() => import("./pages/SalesTable"));
 const SalesDetail = lazy(() => import("./pages/SalesDetail"));
@@ -27,8 +26,6 @@ const App: React.FC = () => {
         {/* Protected routes (with layout) */}
         {isLoggedIn ? (
           <Route element={<MainLayout />}>
-            <Route path="/home" element={<Home />} />
-            <Route path="/about" element={<About />} />
             <Route path="/upload" element={<Upload />} />
             <Route path="/sales" element={<SalesTable />} />
             <Route path="/sales/:picklistNo" element={<SalesDetail />} />

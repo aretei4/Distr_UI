@@ -40,7 +40,7 @@ const SelectedSales: React.FC = () => {
 
   // load delivery boys (API fallback to mock)
   useEffect(() => {
-    fetch(ApiEndpoints.AGENTS)
+    fetch(ApiEndpoints.DELIVERY_AGENTS)
       .then((res) => {
         if (!res.ok) throw new Error("Network response not ok");
         return res.json();
@@ -108,8 +108,8 @@ const SelectedSales: React.FC = () => {
       },
     };
 console.log(JSON.stringify(payload));
-    try {
-      const res = await fetch(`${ApiEndpoints.SALES}/assign`, {
+    try { 
+      const res = await fetch(`${ApiEndpoints.DELIVERY_ASIGN}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -199,10 +199,10 @@ console.log(JSON.stringify(payload));
                 {filteredDelivery.map((d) => (
                   <li
                     key={d.id}
-                    onClick={() => handleSelectDelivery(d.id, d.name)}
+                    onClick={() => handleSelectDelivery(d.contact, d.name)}
                     className="p-2 hover:bg-blue-100 cursor-pointer"
                   >
-                    {d.name} <span className="text-gray-500">({d.phone})</span>
+                    {d.name} <span className="text-gray-500">({d.contact})</span>
                   </li>
                 ))}
               </ul>

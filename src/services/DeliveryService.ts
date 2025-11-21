@@ -20,3 +20,13 @@ export const fetchDeliveryData = async (
 
   return response.json();
 };
+
+export const fetchDeliveryAgents = async () => {
+  const response = await fetch(ApiEndpoints.DELIVERY_AGENTS);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch delivery agents");
+  }
+
+  return response.json();
+};

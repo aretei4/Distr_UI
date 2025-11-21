@@ -1,75 +1,123 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { fetchDeliveryAgents } from "../services/DeliveryService";
 
-interface DeliveryAgent {
+interface DeliveryBoy {
   id: number;
   name: string;
-  contact: string;
-  vehicleNo: string;
-  region: string;
+  phone: string;
 }
 
 const DeliveryAgents: React.FC = () => {
+  const [data, setData] = useState<DeliveryBoy[]>([]);
+  const [selected, setSelected] = useState<number[]>([]);
   const navigate = useNavigate();
 
-  // Mock delivery agent list (replace with API later)
-  const agents: DeliveryAgent[] = [
-    { id: 1, name: "Santosh Muduli", contact: "+91 9876543210", vehicleNo: "OD02-AB-1234", region: "Bhubaneswar" },
-    { id: 2, name: "Ramesh Rout", contact: "+91 9998822110", vehicleNo: "OD07-CD-5678", region: "Cuttack" },
-    { id: 3, name: "Prakash Das", contact: "+91 9123456789", vehicleNo: "OD33-EF-1111", region: "Puri" },
-    { id: 4, name: "Suresh Nayak", contact: "+91 9312345678", vehicleNo: "OD14-GH-2222", region: "Balasore" },
-  ];
+  useEffect(() => {
+    loadAgents();
+  }, []);
 
-  const handleSelect = (agentId: number) => {
-    navigate(`/agents/${agentId}`); // Go to DeliveryTable
+  const loadAgents = async () => {
+    try {
+      const response = await fetchDeliveryAgents();
+      setData(response);
+
+      // ⭐ Save in localStorage so DeliveryTable can access agent details
+      localStorage.setItem("DELIVERY_AGENTS", JSON.stringify(response));
+    } catch (err) {
+      console.error(err);
+      alert("Failed to load delivery agents");
+    }
+  };
+
+  const handleCheckbox = (id: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleRowClick = (id: number) => {
+    navigate(`/agents/${id}`);
+  };
+
+  const handleDelete = () => {
+    if (selected.length === 0) {
+      alert("Please select at least one agent to delete");
+      return;
+    }
+
+    const updated = data.filter((d) => !selected.includes(d.id));
+    setData(updated);
+    setSelected([]);
+
+    // TODO: backend delete API call
   };
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-semibold text-blue-800 mb-4">
-        🚚 Delivery Agent List
-      </h2>
+    <div style={{ width: "70%", margin: "20px auto" }}>
+      <h2>Delivery Agents</h2>
 
-      <div className="overflow-x-auto bg-white shadow rounded">
-        <table className="min-w-full border border-gray-300">
-          <thead className="bg-gray-200 text-gray-700">
-            <tr>
-              <th className="border px-4 py-2 text-left">#</th>
-              <th className="border px-4 py-2 text-left">Agent Name</th>
-              <th className="border px-4 py-2 text-left">Contact</th>
-              <th className="border px-4 py-2 text-left">Vehicle No</th>
-              <th className="border px-4 py-2 text-left">Region</th>
-              <th className="border px-4 py-2 text-center">Action</th>
+      <button
+        onClick={handleDelete}
+        style={{
+          background: "red",
+          color: "white",
+          padding: "8px 16px",
+          borderRadius: "5px",
+          cursor: "pointer",
+          marginBottom: "10px",
+          border: "none"
+        }}
+      >
+        Delete Selected
+      </button>
+
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+          marginTop: "10px"
+        }}
+      >
+        <thead>
+          <tr style={{ background: "#f0f0f0" }}>
+            <th>Select</th>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Phone</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {data.map((boy) => (
+            <tr
+              key={boy.id}
+              style={{ borderBottom: "1px solid #ccc", cursor: "pointer" }}
+              onClick={() => handleRowClick(boy.contact)}
+            >
+              <td onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="checkbox"
+                  checked={selected.includes(boy.id)}
+                  onClick={(e) => handleCheckbox(boy.id, e)}
+                />
+              </td>
+              <td>{boy.id}</td>
+              <td>{boy.name}</td>
+              <td>{boy.contact}</td>
             </tr>
-          </thead>
-          <tbody>
-            {agents.map((agent, index) => (
-              <tr
-                key={agent.id}
-                className="hover:bg-blue-50 cursor-pointer"
-                onClick={() => handleSelect(agent.id)}
-              >
-                <td className="border px-4 py-2">{index + 1}</td>
-                <td className="border px-4 py-2">{agent.name}</td>
-                <td className="border px-4 py-2">{agent.contact}</td>
-                <td className="border px-4 py-2">{agent.vehicleNo}</td>
-                <td className="border px-4 py-2">{agent.region}</td>
-                <td className="border px-4 py-2 text-center">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSelect(agent.id);
-                    }}
-                    className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
-                  >
-                    View Deliveries
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+
+          {data.length === 0 && (
+            <tr>
+              <td colSpan={4} style={{ textAlign: "center", padding: "10px" }}>
+                No records found
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
     </div>
   );
 };

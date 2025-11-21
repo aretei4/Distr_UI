@@ -1,0 +1,10 @@
+
+scp -i tomcat -r ubuntu@ ubuntu@device4autism.in:/home/ubuntu/https "D:\project\distributor\software\nginx"
+scp -i tomcat -r "D:\project\distributor\UI\dist" ubuntu@device4autism.in:/home/ubuntu
+/var/www/distr
+ssh -i tomcat ubuntu@device4autism.in
+cp -r /home/ubuntu/dist/ /var/www/distr/build/
+
+scp -i tomcat "D:\project\distributor\software\nginx\https\distr.conf" ubuntu@device4autism.in:/home/ubuntu/distr/spring/distr.jar
+sudo nohup java -jar distr.jar > output.log 2>&1 &
+ps -ef | grep nohup

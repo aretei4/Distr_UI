@@ -13,11 +13,10 @@ const MainLayout: React.FC = () => {
     <div className="min-h-screen flex flex-col">
       <header className="bg-blue-600 text-white p-4 flex justify-between">
         <nav className="space-x-4">
-          <Link to="/home">Home</Link>
           <Link to="/sales">Sales</Link>
           <Link to="/upload">Upload</Link>
-          <Link to="/agents">About</Link>
-		  <Link to="/delivery">delivery</Link>
+          <Link to="/agents">Agent List</Link>
+		  <Link to="/delivery">Delivery Status</Link>
         </nav>
         <button
           onClick={handleLogout}
