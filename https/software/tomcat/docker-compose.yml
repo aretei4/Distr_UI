@@ -1,0 +1,16 @@
+version: "3.9"
+
+services:
+  tomcat:
+    image: tomcat:9.0-jdk17
+    container_name: tomcat-server
+    ports:
+      - "8080:8080"
+    environment:
+      - TZ=Asia/Kolkata
+    volumes:
+      # Mount your WAR file to Tomcat webapps directory
+      - ./webapps:/usr/local/tomcat/webapps
+      # Mount custom users file to enable admin access
+      - ./tomcat-users.xml:/usr/local/tomcat/conf/tomcat-users.xml
+    restart: always

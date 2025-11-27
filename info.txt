@@ -5,6 +5,6 @@ scp -i tomcat -r "D:\project\distributor\UI\dist" ubuntu@device4autism.in:/home/
 ssh -i tomcat ubuntu@device4autism.in
 cp -r /home/ubuntu/dist/ /var/www/distr/build/
 
-scp -i tomcat "D:\project\distributor\software\nginx\https\distr.conf" ubuntu@device4autism.in:/home/ubuntu/distr/spring/distr.jar
+scp -i tomcat "D:\project\distributor\wsp\qualcy_jwt\target\distr.jar" ubuntu@device4autism.in:/home/ubuntu
 sudo nohup java -jar distr.jar > output.log 2>&1 &
 ps -ef | grep nohup

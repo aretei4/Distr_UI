@@ -1,8 +1,8 @@
 // src/constants/config.ts
 
 // Read from environment (.env files)
-const API_BASE_URL: string ="https://device4autism.in/api";
-//const API_BASE_URL: string ="http://localhost:8080/api";
+//const API_BASE_URL: string ="https://device4autism.in/api";
+const API_BASE_URL: string ="http://localhost:8080/api";
 
 // ✅ Global App Config Constants
 export const AppConfig = {
