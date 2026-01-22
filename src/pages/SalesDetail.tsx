@@ -5,20 +5,19 @@ import { ApiEndpoints } from "../constants/config";
 interface SalesEntry {
   picklistNo: string;
   custDesc: string;
-  salesRepName: string;
   netValue: number;
 }
 
 interface CarDetails {
-  carNo: string;
-  driverName: string;
-  mobile: string;
+  carNo?: string;
+  driverName?: string;
+  mobile?: string;
 }
 
 interface DeliveryBoy {
   id: number;
   name: string;
-  phone: string;
+  contact: string; // ✅ matches backend
 }
 
 const SelectedSales: React.FC = () => {
@@ -27,44 +26,40 @@ const SelectedSales: React.FC = () => {
   const selected: SalesEntry[] = location.state?.selectedSales || [];
 
   const [search, setSearch] = useState("");
-  const [car, setCar] = useState<CarDetails>({
-    carNo: "",
-    driverName: "",
-    mobile: "",
-  });
+  const [car, setCar] = useState<CarDetails>({});
   const [deliveryList, setDeliveryList] = useState<DeliveryBoy[]>([]);
   const [filteredDelivery, setFilteredDelivery] = useState<DeliveryBoy[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [deliveryQuery, setDeliveryQuery] = useState(""); // text user types
+  const [deliveryQuery, setDeliveryQuery] = useState("");
   const [deliveryBoyId, setDeliveryBoyId] = useState<number | null>(null);
 
-  // load delivery boys (API fallback to mock)
+  // Load delivery agents
   useEffect(() => {
     fetch(ApiEndpoints.DELIVERY_AGENTS)
-      .then((res) => {
-        if (!res.ok) throw new Error("Network response not ok");
-        return res.json();
-      })
-      .then((data) => setDeliveryList(data))
+      .then((res) => res.json())
+      .then(setDeliveryList)
       .catch(() => {
+        // fallback mock
         setDeliveryList([
-          { id: 1, name: "SANTOSH MUDULI", phone: "9876543210" },
-          { id: 2, name: "RAJESH KUMAR", phone: "9876500000" },
-          { id: 3, name: "PRASANT ROUT", phone: "9811111111" },
-          { id: 4, name: "RANJAN SAHOO", phone: "9822222222" },
+          { id: 30, name: "Anil Patra", contact: "9988776655" },
+          { id: 31, name: "Ranjan Sahoo", contact: "9876543210" },
         ]);
       });
   }, []);
 
-  // filter delivery suggestions as user types
+  // Filter suggestions
   useEffect(() => {
     const q = deliveryQuery.trim().toLowerCase();
-    if (q.length === 0) {
+    if (!q) {
       setFilteredDelivery([]);
       return;
     }
     setFilteredDelivery(
-      deliveryList.filter((d) => d.name.toLowerCase().includes(q))
+      deliveryList.filter(
+        (d) =>
+          d.name.toLowerCase().includes(q) ||
+          d.contact.includes(q)
+      )
     );
   }, [deliveryQuery, deliveryList]);
 
@@ -73,69 +68,72 @@ const SelectedSales: React.FC = () => {
     setCar((prev) => ({ ...prev, [name]: value }));
   };
 
-  // when a suggestion is clicked, set both id and display text
+  // ✅ Correct selection (id + contact)
   const handleSelectDelivery = (id: number, name: string) => {
+    const selectedBoy = deliveryList.find((d) => d.id === id);
     setDeliveryBoyId(id);
     setDeliveryQuery(name);
+    setCar((prev) => ({
+      ...prev,
+      mobile: selectedBoy?.contact || prev.mobile,
+    }));
     setShowSuggestions(false);
   };
 
-  // prepare picklist array
-  const picklistNos = useMemo(() => selected.map((s) => s.picklistNo), [selected]);
+  const picklistNos = useMemo(
+    () => selected.map((s) => s.picklistNo),
+    [selected]
+  );
 
-  // submit payload: deliveryBoyId + picklistNos + car details
   const handleSubmit = async () => {
     if (!deliveryBoyId) {
-      alert("Please select a delivery boy from suggestions.");
+      alert("Please select a delivery boy.");
       return;
     }
+
     if (picklistNos.length === 0) {
       alert("No picklists selected.");
       return;
     }
-    if (!car.carNo.trim() || !car.driverName.trim() || !car.mobile.trim()) {
-      alert("Please fill car number, driver name and mobile.");
-      return;
-    }
+
+    const carPayload =
+      car.carNo || car.driverName || car.mobile
+        ? {
+            carNo: car.carNo?.trim(),
+            driverName: car.driverName?.trim(),
+            mobile: car.mobile?.trim(),
+          }
+        : undefined;
 
     const payload = {
       deliveryBoyId,
       picklistNos,
-      car: {
-        carNo: car.carNo.trim(),
-        driverName: car.driverName.trim(),
-        mobile: car.mobile.trim(),
-      },
+      ...(carPayload && { car: carPayload }),
     };
-console.log(JSON.stringify(payload));
-    try { 
-      const res = await fetch(`${ApiEndpoints.DELIVERY_ASIGN}`, {
+
+    try {
+      const res = await fetch(ApiEndpoints.DELIVERY_ASIGN, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) {
-        const text = await res.text().catch(() => "");
-        throw new Error(text || "Server returned error");
-      }
+      if (!res.ok) throw new Error("Assignment failed");
 
-      alert("✅ Delivery assignment successful.");
-      navigate("/agents"); // or wherever appropriate
+      alert("✅ Delivery assigned successfully");
+      navigate("/agents");
     } catch (err) {
-      console.error("Assign error:", err);
-      alert("❌ Failed to assign delivery. See console for details.");
+      console.error(err);
+      alert("❌ Assignment failed");
     }
   };
 
-  // client-side search on selected records
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     return selected.filter(
-      (item) =>
-        item.custDesc.toLowerCase().includes(q) ||
-        item.picklistNo.toLowerCase().includes(q) ||
-        item.salesRepName.toLowerCase().includes(q)
+      (s) =>
+        s.picklistNo.toLowerCase().includes(q) ||
+        s.custDesc.toLowerCase().includes(q)
     );
   }, [search, selected]);
 
@@ -144,92 +142,81 @@ console.log(JSON.stringify(payload));
       <div className="flex justify-between items-center">
         <button
           onClick={() => navigate(-1)}
-          className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800"
+          className="bg-gray-700 text-white px-4 py-2 rounded"
         >
           ← Back
         </button>
-        <h1 className="text-2xl font-semibold text-gray-800">Selected Records</h1>
+        <h1 className="text-2xl font-semibold">Selected Records</h1>
       </div>
 
-      {/* Car + Delivery Details */}
-      <div className="bg-white p-4 rounded-lg shadow-md space-y-3">
-        <h2 className="text-lg font-semibold text-gray-700 mb-2">🚚 Delivery Assignment</h2>
+      {/* Delivery Assignment */}
+      <div className="bg-white p-4 rounded-lg shadow space-y-4">
+        <h2 className="text-lg font-semibold">🚚 Delivery Assignment</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">Car No</label>
-            <input
-              name="carNo"
-              value={car.carNo}
-              onChange={handleCarChange}
-              className="border p-2 w-full rounded"
-              placeholder="e.g. OD02AB1234"
-            />
-          </div>
+          <input
+            name="carNo"
+            value={car.carNo || ""}
+            onChange={handleCarChange}
+            className="border p-2 rounded"
+            placeholder="Car No (optional)"
+          />
 
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">Driver Name</label>
-            <input
-              name="driverName"
-              value={car.driverName}
-              onChange={handleCarChange}
-              className="border p-2 w-full rounded"
-              placeholder="Driver name"
-            />
-          </div>
+          <input
+            name="driverName"
+            value={car.driverName || ""}
+            onChange={handleCarChange}
+            className="border p-2 rounded"
+            placeholder="Driver Name (optional)"
+          />
 
           <div className="relative">
-            <label className="block text-sm text-gray-600 mb-1">Delivery Boy</label>
             <input
-              type="text"
-              name="deliveryBoy"
               value={deliveryQuery}
               onChange={(e) => {
                 setDeliveryQuery(e.target.value);
                 setShowSuggestions(true);
-                setDeliveryBoyId(null); // clear id until user picks suggestion
+                setDeliveryBoyId(null);
               }}
-              className="border p-2 w-full rounded"
-              placeholder="Type and select delivery boy"
+              className="border p-2 rounded w-full"
+              placeholder="Select delivery boy"
               autoComplete="off"
             />
 
             {showSuggestions && filteredDelivery.length > 0 && (
-              <ul className="absolute z-10 bg-white border rounded-md w-full mt-1 shadow-lg max-h-44 overflow-y-auto">
+              <ul className="absolute z-10 bg-white border rounded w-full mt-1 shadow max-h-40 overflow-auto">
                 {filteredDelivery.map((d) => (
                   <li
                     key={d.id}
-                    onClick={() => handleSelectDelivery(d.contact, d.name)}
+                    onClick={() => handleSelectDelivery(d.id, d.name)}
                     className="p-2 hover:bg-blue-100 cursor-pointer"
                   >
-                    {d.name} <span className="text-gray-500">({d.contact})</span>
+                    {d.name}
+                    <span className="text-gray-500"> ({d.contact})</span>
                   </li>
                 ))}
               </ul>
             )}
           </div>
 
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">Mobile</label>
-            <input
-              name="mobile"
-              value={car.mobile}
-              onChange={handleCarChange}
-              className="border p-2 w-full rounded"
-              placeholder="Driver / delivery mobile (optional)"
-            />
-          </div>
+          <input
+            name="mobile"
+            value={car.mobile || ""}
+            onChange={handleCarChange}
+            className="border p-2 rounded"
+            placeholder="Mobile (optional)"
+          />
         </div>
       </div>
 
-      {/* Search + table */}
-      <div className="bg-white p-4 rounded-lg shadow-md">
+      {/* Table */}
+      <div className="bg-white p-4 rounded-lg shadow">
         <div className="flex justify-between items-center mb-4">
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="🔍 Search Customer, Picklist, or Sales Rep"
-            className="border p-2 rounded-md w-full md:w-1/2"
+            placeholder="🔍 Search Customer or Picklist"
+            className="border p-2 rounded w-full md:w-1/2"
           />
           <button
             onClick={handleSubmit}
@@ -239,34 +226,34 @@ console.log(JSON.stringify(payload));
           </button>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm text-left border border-gray-200">
-            <thead className="bg-gray-100 text-gray-700 uppercase">
+        <table className="min-w-full text-sm border border-gray-200">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="p-2 border">Picklist No</th>
+              <th className="p-2 border">Customer</th>
+              <th className="p-2 border text-right">Net Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 ? (
               <tr>
-                <th className="p-2 border">Picklist No</th>
-                <th className="p-2 border">Customer</th>
-                <th className="p-2 border">Sales Rep</th>
-                <th className="p-2 border text-right">Net Value</th>
+                <td colSpan={3} className="p-4 text-center text-gray-500">
+                  No records found
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="text-center p-4 text-gray-500">No records found.</td>
+            ) : (
+              filtered.map((s) => (
+                <tr key={s.picklistNo} className="hover:bg-gray-50">
+                  <td className="p-2 border">{s.picklistNo}</td>
+                  <td className="p-2 border">{s.custDesc}</td>
+                  <td className="p-2 border text-right">
+                    ₹{s.netValue.toLocaleString("en-IN")}
+                  </td>
                 </tr>
-              ) : (
-                filtered.map((item) => (
-                  <tr key={item.picklistNo} className="border-t hover:bg-gray-50 transition">
-                    <td className="p-2 border">{item.picklistNo}</td>
-                    <td className="p-2 border">{item.custDesc}</td>
-                    <td className="p-2 border">{item.salesRepName}</td>
-                    <td className="p-2 border text-right">₹{item.netValue.toLocaleString("en-IN")}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

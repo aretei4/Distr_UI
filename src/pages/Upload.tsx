@@ -1,12 +1,33 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ApiEndpoints } from "../constants/config";
 
 const Upload: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [fileType, setFileType] = useState("");
+  const [fileTypes, setFileTypes] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
-  const [isUploading, setIsUploading] = useState(false); // <-- NEW
+  const [isUploading, setIsUploading] = useState(false);
+  const [loadingTypes, setLoadingTypes] = useState(false);
+
+  // 🔹 Load file types dynamically
+  useEffect(() => {
+    loadFileTypes();
+  }, []);
+
+  const loadFileTypes = async () => {
+    try {
+      setLoadingTypes(true);
+      const response = await fetch(ApiEndpoints.ALL_TEMPLATE);
+      const data: string[] = await response.json();
+      setFileTypes(data);
+    } catch (error) {
+      console.error(error);
+      setMessage("⚠️ Failed to load file types");
+    } finally {
+      setLoadingTypes(false);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -40,7 +61,7 @@ const Upload: React.FC = () => {
     formData.append("type", fileType);
 
     try {
-      setIsUploading(true); // <-- START LOADING
+      setIsUploading(true);
 
       const response = await fetch(ApiEndpoints.UPLOAD, {
         method: "POST",
@@ -59,30 +80,42 @@ const Upload: React.FC = () => {
       } else {
         setMessage("❌ Server returned an error");
       }
-
     } catch (error) {
       console.error(error);
       setMessage("⚠️ Could not reach server");
     } finally {
-      setIsUploading(false); // <-- STOP LOADING
+      setIsUploading(false);
     }
   };
 
   return (
     <div className="max-w-xl mx-auto mt-10 bg-white shadow-md rounded-xl p-6">
 
-      <h1 className="text-2xl font-semibold mb-4 text-center">Upload Excel</h1>
+      <h1 className="text-2xl font-semibold mb-4 text-center">
+        Upload Excel
+      </h1>
 
       <label className="font-medium">Select File Type</label>
       <select
         value={fileType}
         onChange={(e) => setFileType(e.target.value)}
         className="w-full border p-2 rounded mb-4"
+        disabled={loadingTypes}
       >
         <option value="">-- Select --</option>
-        <option value="sales">Sales Master</option>
-        <option value="agent">Delivery Agent List</option>
+
+        {fileTypes.map((type) => (
+          <option key={type} value={type}>
+            {type.toUpperCase()}
+          </option>
+        ))}
       </select>
+
+      {loadingTypes && (
+        <p className="text-sm text-gray-500 mb-2">
+          Loading file types...
+        </p>
+      )}
 
       <input
         type="file"
@@ -95,16 +128,20 @@ const Upload: React.FC = () => {
         onClick={handleUpload}
         disabled={isUploading}
         className={`w-full py-2 mt-4 rounded text-white
-           ${isUploading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}
+          ${isUploading
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-blue-600 hover:bg-blue-700"
+          }`}
       >
         {isUploading ? "Uploading..." : "Upload"}
       </button>
 
-      {/* ⏳ Loader */}
       {isUploading && (
         <div className="flex items-center justify-center mt-4">
           <div className="animate-spin h-6 w-6 border-4 border-blue-600 border-t-transparent rounded-full"></div>
-          <span className="ml-3 text-blue-700 font-medium">Uploading, please wait...</span>
+          <span className="ml-3 text-blue-700 font-medium">
+            Uploading, please wait...
+          </span>
         </div>
       )}
 

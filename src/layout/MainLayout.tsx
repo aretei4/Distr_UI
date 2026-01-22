@@ -14,8 +14,11 @@ const MainLayout: React.FC = () => {
       <header className="bg-blue-600 text-white p-4 flex justify-between">
         <nav className="space-x-4">
           <Link to="/sales">Sales</Link>
+		  <Link to="/template">Template</Link>
           <Link to="/upload">Upload</Link>
           <Link to="/agents">Agent List</Link>
+		   <Link to="/customer">Customer List</Link>
+		   <Link to="/dashboard">Report</Link>
 		  <Link to="/delivery">Delivery Status</Link>
         </nav>
         <button

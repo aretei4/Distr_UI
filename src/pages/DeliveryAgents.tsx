@@ -94,7 +94,7 @@ const DeliveryAgents: React.FC = () => {
             <tr
               key={boy.id}
               style={{ borderBottom: "1px solid #ccc", cursor: "pointer" }}
-              onClick={() => handleRowClick(boy.contact)}
+              onClick={() => handleRowClick(boy.id)}
             >
               <td onClick={(e) => e.stopPropagation()}>
                 <input

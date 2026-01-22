@@ -6,7 +6,7 @@ interface DeliveryEntry {
   picklistNo: string;
   customerNo: string;
   custDesc: string;
-  netValue: number;
+  netValue: number; // ✅ normalized to number
   updateDate: string;
 }
 
@@ -23,46 +23,57 @@ const DeliveryTable: React.FC = () => {
   const [filtered, setFiltered] = useState<DeliveryEntry[]>([]);
   const [search, setSearch] = useState("");
 
+  // Load Agent
   useEffect(() => {
     if (!agentId) return;
 
-    // Load agents from localStorage
     const stored = localStorage.getItem("DELIVERY_AGENTS");
     if (stored) {
       const list = JSON.parse(stored);
-      const found = list.find((a: DeliveryAgent) => a.id.toString() === agentId);
+      const found = list.find(
+        (a: DeliveryAgent) => a.id.toString() === agentId
+      );
       setAgent(found);
     }
   }, [agentId]);
 
+  // Load Delivery Data
   useEffect(() => {
     if (!agentId) return;
 
     fetch(`${ApiEndpoints.DELIVERY_ASIGN_LIST}${agentId}`)
       .then((res) => res.json())
-      .then((data) => {
-        setData(data);
-        setFiltered(data);
-      });
+      .then((resp) => {
+        // ✅ Normalize netValue to number
+        const normalized: DeliveryEntry[] = resp.map((d: any) => ({
+          ...d,
+          netValue: Number(d.netValue || 0),
+        }));
+
+        setData(normalized);
+        setFiltered(normalized);
+      })
+      .catch((err) => console.error("Fetch error:", err));
   }, [agentId]);
 
-  // ⭐ CUSTOMER NAME OR PICKLIST FILTER
+  // Search Filter
   useEffect(() => {
     const q = search.toLowerCase();
 
-    if (q.trim() === "") {
+    if (!q.trim()) {
       setFiltered(data);
     } else {
       setFiltered(
-        data.filter((d) =>
-          d.custDesc.toLowerCase().includes(q) ||
-          d.picklistNo.toLowerCase().includes(q)
+        data.filter(
+          (d) =>
+            d.custDesc.toLowerCase().includes(q) ||
+            d.picklistNo.toLowerCase().includes(q)
         )
       );
     }
   }, [search, data]);
 
-  // ⭐ DELETE ROW
+  // Delete Row
   const deleteRow = async (picklistNo: string) => {
     if (!window.confirm("Are you sure you want to delete this record?")) return;
 
@@ -124,7 +135,12 @@ const DeliveryTable: React.FC = () => {
                   <td className="border px-4 py-2">{row.picklistNo}</td>
                   <td className="border px-4 py-2">{row.customerNo}</td>
                   <td className="border px-4 py-2">{row.custDesc}</td>
-                  <td className="border px-4 py-2">{row.netValue.toFixed(2)}</td>
+
+                  {/* ✅ FIXED */}
+                  <td className="border px-4 py-2 text-right">
+                    {row.netValue.toFixed(2)}
+                  </td>
+
                   <td className="border px-4 py-2">{row.updateDate}</td>
 
                   <td className="border px-4 py-2 text-center">
