@@ -13,13 +13,13 @@ const MainLayout: React.FC = () => {
     <div className="min-h-screen flex flex-col">
       <header className="bg-blue-600 text-white p-4 flex justify-between">
         <nav className="space-x-4">
-          <Link to="/sales">Sales</Link>
-		  <Link to="/template">Template</Link>
-          <Link to="/upload">Upload</Link>
-          <Link to="/agents">Agent List</Link>
-		   <Link to="/customer">Customer List</Link>
-		   <Link to="/dashboard">Report</Link>
-		  <Link to="/delivery">Delivery Status</Link>
+		<Link to="/dashboard">Delivery Status</Link>
+		<Link to="/sales">Sales</Link>		 
+		<Link to="/upload">Upload</Link>		 
+		<Link to="/template">Master Template</Link> 
+		<Link to="/delivery">Delivery Report</Link> 		
+        <Link to="/agents">Agent List</Link>
+		<Link to="/customer">Customer List</Link>		  
         </nav>
         <button
           onClick={handleLogout}

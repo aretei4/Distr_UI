@@ -98,7 +98,7 @@ const TemplateMappingPage: React.FC = () => {
 
   return (
     <div style={{ padding: 20, maxWidth: 700 }}>
-      <h2>Create XLSX Upload Template</h2>
+      <h2>Create Master Template</h2>
 
       {/* Template Type */}
       <div style={{ marginBottom: 15 }}>
@@ -116,9 +116,9 @@ const TemplateMappingPage: React.FC = () => {
           style={{ padding: 6 }}
         >
           <option value="">Select Template Type</option>
-          <option value="delivery">Delivery</option>
-          <option value="customer">Customer</option>
-          <option value="sales">Sales</option>
+          <option value="delivery">Delivery Agent Template</option>
+          <option value="customer">Customer Agent Template</option>
+          <option value="sales">Invoice Template</option>
         </select>
       </div>
 

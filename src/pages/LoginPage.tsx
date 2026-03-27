@@ -10,7 +10,7 @@ const Login: React.FC = () => {
     e.preventDefault();
     if (username.trim() && password.trim()) {
       localStorage.setItem("loggedIn", "true");
-      navigate("/sales");
+      navigate("/dashboard");
     } else {
       alert("Please enter both fields");
     }

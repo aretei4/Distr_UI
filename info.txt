@@ -10,3 +10,9 @@ sudo nohup java -jar distr.jar > output.log 2>&1 &
 ps -ef | grep nohup
 
 4bc9ddcb-f15d-11f0-a6b2-0200cd936042 -otp -2Factor
+
+
+---------------------------
+scp -i tomcat "D:\project\voter\wsp\Popinion\target\Popinion-4.0.2.jar" ubuntu@device4autism.in:/home/ubuntu/opinion.jar
+ssh -i tomcat ubuntu@device4autism.in
+sudo nohup java -jar Popinion.jar > opinion.log 2>&1 &
