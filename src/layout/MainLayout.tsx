@@ -19,7 +19,9 @@ const MainLayout: React.FC = () => {
 		<Link to="/template">Master Template</Link> 
 		<Link to="/delivery">Delivery Report</Link> 		
         <Link to="/agents">Agent List</Link>
-		<Link to="/customer">Customer List</Link>		  
+		<Link to="/customer">Customer List</Link>	
+		<Link to="/dayEnd">Day End</Link>			
+		
         </nav>
         <button
           onClick={handleLogout}

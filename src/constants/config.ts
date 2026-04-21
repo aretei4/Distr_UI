@@ -1,8 +1,8 @@
 // src/constants/config.ts
 
 // Read from environment (.env files)
-const API_BASE_URL: string ="https://device4autism.in/api";
-//const API_BASE_URL: string ="http://localhost:8080/api";
+//const API_BASE_URL: string ="https://device4autism.in/api";
+const API_BASE_URL: string ="http://localhost:8080/api";
 
 // ✅ Global App Config Constants
 export const AppConfig = {
@@ -27,5 +27,9 @@ export const ApiEndpoints = {
    ALL_TEMPLATE: `${API_BASE_URL}/template/names`,
    SAVE_TEMPLATE: `${API_BASE_URL}/template/save`,
    DELIVERY_DASHBOARD: `${API_BASE_URL}/dashboard/delivery-summary`,
-   DELIVERY_STATUS: `${API_BASE_URL}/dashboard/delivery-summary`,     
+   DELIVERY_STATUS: `${API_BASE_URL}/dashboard/delivery-summary`,
+   DAY_END_SUMMARY: `${API_BASE_URL}/dayend/dayEndSummery`,
+   DAY_END_APPROVE: `${API_BASE_URL}/dayend/approve`,
+   DAY_END_REJECT: `${API_BASE_URL}/dayend/reject`,
+	
 };

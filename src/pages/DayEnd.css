@@ -1,0 +1,453 @@
+/* ============================================
+   DayEnd Page — Main Styles
+   ============================================ */
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* ── Page wrapper ─────────────────────────── */
+.dayend-page {
+  min-height: 100vh;
+  background: #f8fafc;
+  font-family: "DM Sans", "Segoe UI", sans-serif;
+}
+
+.dayend-container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 36px 24px;
+}
+
+/* ── Header ───────────────────────────────── */
+.dayend-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.dayend-header__title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.5px;
+}
+
+.dayend-header__subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.dayend-refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: 9px;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s;
+}
+
+.dayend-refresh-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.dayend-refresh-btn__icon--spinning {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
+/* ── Filter card ──────────────────────────── */
+.dayend-filters {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+}
+
+.dayend-filters__search {
+  width: 100%;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  padding: 9px 14px;
+  font-size: 13px;
+  color: #1e293b;
+  outline: none;
+  margin-bottom: 12px;
+  background: #f8fafc;
+  font-family: inherit;
+  transition: border 0.2s;
+}
+
+.dayend-filters__search:focus {
+  border-color: #94a3b8;
+}
+
+.dayend-filters__row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.dayend-filters__select {
+  flex: 1 1 160px;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  padding: 9px 14px;
+  font-size: 13px;
+  color: #1e293b;
+  outline: none;
+  background: #f8fafc;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border 0.2s;
+}
+
+.dayend-filters__select:focus {
+  border-color: #94a3b8;
+}
+
+.dayend-filters__date-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 2 1 260px;
+}
+
+.dayend-filters__date-label {
+  font-size: 12px;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.dayend-filters__date-input {
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: #1e293b;
+  outline: none;
+  background: #f8fafc;
+  font-family: inherit;
+  transition: border 0.2s;
+  cursor: pointer;
+}
+
+.dayend-filters__date-input:focus {
+  border-color: #94a3b8;
+}
+
+.dayend-filters__date-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+}
+
+.dayend-filters__clear-btn {
+  padding: 7px 13px;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  color: #64748b;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.dayend-filters__clear-btn:hover {
+  background: #f8fafc;
+  color: #ef4444;
+  border-color: #fca5a5;
+}
+
+/* ── Table ────────────────────────────────── */
+.dayend-table {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.dayend-table__header {
+  display: grid;
+  grid-template-columns: 1.8fr 1.5fr 1.1fr 1.1fr 1.2fr 1.3fr;
+  padding: 12px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #f8fafc;
+}
+
+.dayend-table__header-cell {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.dayend-table__state {
+  padding: 60px 0;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.dayend-table__row {
+  display: grid;
+  grid-template-columns: 1.8fr 1.5fr 1.1fr 1.1fr 1.2fr 1.3fr;
+  padding: 16px 20px;
+  align-items: center;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.15s;
+}
+
+.dayend-table__row:last-child {
+  border-bottom: none;
+}
+
+.dayend-table__row:hover {
+  background: #fafbff;
+}
+
+.dayend-table__cell--name {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 14px;
+}
+
+.dayend-table__cell--date {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.dayend-table__cell--amount {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.dayend-table__cell--reason {
+  font-size: 12px;
+  color: #94a3b8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Action buttons ───────────────────────── */
+.dayend-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dayend-actions__btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border-radius: 7px;
+  border: none;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.dayend-actions__btn:hover {
+  transform: scale(1.04);
+}
+
+.dayend-actions__btn--approve {
+  background: #10b981;
+  color: #fff;
+}
+
+.dayend-actions__btn--approve:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.dayend-actions__btn--reject {
+  background: #ef4444;
+  color: #fff;
+}
+
+.dayend-actions__settled {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* ── Status badge ─────────────────────────── */
+.dayend-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+/* ── Summary footer ───────────────────────── */
+.dayend-summary {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.dayend-summary__card {
+  border-radius: 10px;
+  padding: 10px 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dayend-summary__count {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.dayend-summary__label {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ── Toast notification ───────────────────── */
+.dayend-toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 2000;
+  padding: 12px 22px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s ease;
+}
+
+.dayend-toast--success { background: #10b981; }
+.dayend-toast--error   { background: #ef4444; }
+
+/* ── Reject modal ─────────────────────────── */
+.dayend-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dayend-modal {
+  background: #fff;
+  border-radius: 14px;
+  padding: 32px 28px;
+  min-width: 360px;
+  max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+}
+
+.dayend-modal__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 6px;
+}
+
+.dayend-modal__subtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 20px;
+}
+
+.dayend-modal__textarea {
+  width: 100%;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #1e293b;
+  resize: none;
+  outline: none;
+  font-family: inherit;
+  transition: border 0.2s;
+}
+
+.dayend-modal__textarea:focus {
+  border-color: #ef4444;
+}
+
+.dayend-modal__footer {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+  justify-content: flex-end;
+}
+
+.dayend-modal__cancel-btn {
+  padding: 8px 20px;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s;
+}
+
+.dayend-modal__cancel-btn:hover {
+  background: #f8fafc;
+}
+
+.dayend-modal__confirm-btn {
+  padding: 8px 20px;
+  border-radius: 8px;
+  border: none;
+  background: #ef4444;
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s;
+}
+
+.dayend-modal__confirm-btn:disabled {
+  background: #fca5a5;
+  cursor: not-allowed;
+}

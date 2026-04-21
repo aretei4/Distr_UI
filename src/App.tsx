@@ -16,6 +16,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const DeliveryDetails = lazy(() => import("./pages/DeliveryDetails"));
 const CustomerList = lazy(() => import("./pages/CustomerList"));
+const DayEnd = lazy(() => import("./pages/DayEnd"));
 
 const App: React.FC = () => {
   // Simple login flag (replace with real auth later)
@@ -30,6 +31,7 @@ const App: React.FC = () => {
         {/* Protected routes (with layout) */}
         {isLoggedIn ? (
           <Route element={<MainLayout />}>
+		   <Route path="/dayEnd" element={<DayEnd />} />
             <Route path="/upload" element={<Upload />} />
 			<Route path="/template" element={<Template />} />
             <Route path="/sales" element={<SalesTable />} />

@@ -1,4 +1,4 @@
-
+sudo certbot certonly --webroot -w /var/www/certbot -d device4autism.in -d www.device4autism.in
 scp -i tomcat -r ubuntu@ ubuntu@device4autism.in:/home/ubuntu/https "D:\project\distributor\software\nginx"
 scp -i tomcat -r "D:\project\distributor\UI\dist" ubuntu@device4autism.in:/home/ubuntu
 /var/www/distr
@@ -6,7 +6,7 @@ ssh -i tomcat ubuntu@device4autism.in
 sudo cp -r /home/ubuntu/dist/ /var/www/distr/build/
 
 scp -i tomcat "D:\project\distributor\wsp\qualcy_jwt\target\distr.jar" ubuntu@device4autism.in:/home/ubuntu
-sudo nohup java -jar distr.jar > output.log 2>&1 &
+sudo nohup java -jar distr.jar > distr.log 2>&1 &
 ps -ef | grep nohup
 
 4bc9ddcb-f15d-11f0-a6b2-0200cd936042 -otp -2Factor
@@ -15,4 +15,4 @@ ps -ef | grep nohup
 ---------------------------
 scp -i tomcat "D:\project\voter\wsp\Popinion\target\Popinion-4.0.2.jar" ubuntu@device4autism.in:/home/ubuntu/opinion.jar
 ssh -i tomcat ubuntu@device4autism.in
-sudo nohup java -jar Popinion.jar > opinion.log 2>&1 &
+sudo nohup java -jar opinion.jar > opinion.log 2>&1 &
