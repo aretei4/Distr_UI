@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { authService } from "../services/authService";
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState("");
@@ -16,11 +17,14 @@ const Login: React.FC = () => {
       return;
     }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 600));
-    localStorage.setItem("loggedIn", "true");
-    localStorage.setItem("userName", username);
-    setLoading(false);
-    navigate("/dashboard");
+    try {
+      await authService.login(username.trim(), password);
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -155,7 +159,7 @@ const Login: React.FC = () => {
                 onFocus={e => e.currentTarget.style.borderColor = "var(--brand)"}
                 onBlur={e => e.currentTarget.style.borderColor = "var(--ink-10)"}
               />
-              <p style={{ fontSize: 11, color: "var(--ink-40)", marginTop: 5 }}>Try: admin / manager / staff</p>
+              <p style={{ fontSize: 11, color: "var(--ink-40)", marginTop: 5 }}>Default accounts: admin / manager / staff</p>
             </div>
 
             {/* Password */}

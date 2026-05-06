@@ -11,6 +11,12 @@ export const AppConfig = {
   COMPANY_NAME: "Devine Distributors Pvt. Ltd.",
 };
 
+export const AuthEndpoints = {
+  LOGIN:       `${API_BASE_URL}/auth/login`,
+  USERS:       `${API_BASE_URL}/users`,
+  USER_BY_ID:  (id: number) => `${API_BASE_URL}/users/${id}`,
+};
+
 export const ApiEndpoints = {
   SALES:                `${API_BASE_URL}/sales?Picklist_No=E587P22657`,
   SALES_DELETE:         `${API_BASE_URL}/sales/delete`,

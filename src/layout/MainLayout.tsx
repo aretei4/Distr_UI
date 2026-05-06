@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
+import { authService } from "../services/authService";
 
 interface NavItem {
   path: string;
@@ -97,11 +98,13 @@ const MainLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem("loggedIn");
+    authService.logout();
     navigate("/");
   };
 
-  const user = localStorage.getItem("userName") || "Admin";
+  const authUser = authService.getUser();
+  const user = authUser?.fullName || authUser?.username || "Admin";
+  const role = authUser?.role ?? "STAFF";
   const initials = user.slice(0, 2).toUpperCase();
 
   return (
@@ -223,7 +226,7 @@ const MainLayout: React.FC = () => {
               }}>{initials}</div>
               <div style={{ overflow: "hidden" }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{user}</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Admin</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{role}</div>
               </div>
             </div>
           )}
@@ -305,7 +308,10 @@ const MainLayout: React.FC = () => {
                 alignItems: "center", justifyContent: "center",
                 fontSize: 11, fontWeight: 700, color: "#fff",
               }}>{initials}</div>
-              <span style={{ fontSize: 13, fontWeight: 500, color: "var(--ink-80)" }}>{user}</span>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 500, color: "var(--ink-80)" }}>{user}</div>
+                <div style={{ fontSize: 11, color: "var(--ink-40)" }}>{role}</div>
+              </div>
             </div>
           </div>
         </header>
