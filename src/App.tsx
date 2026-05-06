@@ -18,6 +18,7 @@ const Dashboard       = lazy(() => import("./pages/Dashboard"));
 const DeliveryDetails = lazy(() => import("./pages/DeliveryDetails"));
 const CustomerList    = lazy(() => import("./pages/CustomerList"));
 const DayEnd          = lazy(() => import("./pages/DayEnd"));
+const UsersPage       = lazy(() => import("./pages/UsersPage"));
 
 /**
  * ALL routes are always registered — no conditional route tree.
@@ -45,6 +46,7 @@ const App: React.FC = () => (
         <Route path="/upload"   element={<PrivateRoute roles={["ADMIN","MANAGER"]}><Upload /></PrivateRoute>} />
         <Route path="/dayEnd"   element={<PrivateRoute roles={["ADMIN","MANAGER"]}><DayEnd /></PrivateRoute>} />
         <Route path="/template" element={<PrivateRoute roles={["ADMIN"]}><Template /></PrivateRoute>} />
+        <Route path="/users"    element={<PrivateRoute roles={["ADMIN","MANAGER"]}><UsersPage /></PrivateRoute>} />
 
         <Route path="*" element={<NotFound />} />
       </Route>
