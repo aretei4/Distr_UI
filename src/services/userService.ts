@@ -49,9 +49,10 @@ export const userService = {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => null);
-      throw new Error(err?.detail ?? "Failed to create user");
+      throw new Error(err?.error ?? err?.detail ?? err?.message ?? "Failed to create user");
     }
-    return res.json();
+    // Safe parse — treat any 2xx as success even if the body is empty or unparseable
+    return res.json().catch(() => ({} as UserRecord));
   },
 
   async update(id: number, payload: UpdateUserPayload): Promise<UserRecord> {
@@ -62,9 +63,9 @@ export const userService = {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => null);
-      throw new Error(err?.detail ?? "Failed to update user");
+      throw new Error(err?.error ?? err?.detail ?? err?.message ?? "Failed to update user");
     }
-    return res.json();
+    return res.json().catch(() => ({} as UserRecord));
   },
 
   async remove(id: number): Promise<void> {

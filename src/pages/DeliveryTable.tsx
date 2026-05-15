@@ -78,14 +78,14 @@ const DeliveryTable: React.FC = () => {
               width: 52, height: 52, borderRadius: "50%",
               background: "var(--brand)", color: "#fff",
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 800,
+              fontFamily: "'Inter', sans-serif", fontSize: 18, fontWeight: 800,
             }}>{agent.name.slice(0, 2).toUpperCase()}</div>
             <div>
-              <p style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 16, color: "var(--ink)" }}>{agent.name}</p>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: 16, color: "var(--ink)" }}>{agent.name}</p>
               <p style={{ fontSize: 13, color: "var(--ink-60)", marginTop: 2 }}>📞 {agent.contact || agent.phone}</p>
             </div>
             <div style={{ marginLeft: "auto", textAlign: "right" }}>
-              <p style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 22, color: "var(--brand)" }}>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontWeight: 800, fontSize: 22, color: "var(--brand)" }}>
                 ₹{totalValue.toLocaleString("en-IN")}
               </p>
               <p style={{ fontSize: 12, color: "var(--ink-40)", marginTop: 2 }}>Total picklist value</p>
@@ -106,7 +106,7 @@ const DeliveryTable: React.FC = () => {
       >
         {filtered.map((row, i) => (
           <TR key={i}>
-            <TD style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 13, color: "var(--brand)" }}>
+            <TD style={{ fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: 13, color: "var(--brand)" }}>
               {row.picklistNo}
             </TD>
             <TD style={{ color: "var(--ink-60)" }}>{row.customerNo}</TD>

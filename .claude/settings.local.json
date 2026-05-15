@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"D:\\\\project\\\\distributor\\\\wsp\\\\Quick_Connect\" -Recurse -Directory)",
+      "Bash(Select-Object FullName)",
+      "Bash(python3)",
+      "Bash(ls \"D:\\\\project\\\\distributor\\\\wsp\\\\Quick_Connect\\\\app\\\\src\\\\main\\\\res\\\\layout\\\\\" | sed 's/\\\\.xml//')",
+      "Bash(xargs -I {} basename {} .xml)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "WebFetch(domain:www.wtwco.com)",
+      "WebSearch",
+      "WebFetch(domain:ux.willistowerswatson.com)",
+      "WebFetch(domain:rebrand.com)",
+      "Bash(powershell -Command \"\\(Get-Content 'D:\\\\project\\\\claude\\\\device4autism\\\\src\\\\pages\\\\LoginPage.tsx'\\) -replace \\\\\"'Syne', sans-serif\\\\\", \\\\\"'Inter', sans-serif\\\\\" | Set-Content 'D:\\\\project\\\\claude\\\\device4autism\\\\src\\\\pages\\\\LoginPage.tsx' -Encoding utf8\")"
+    ]
+  }
+}

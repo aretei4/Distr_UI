@@ -59,7 +59,7 @@ const CustomerList: React.FC = () => {
       >
         {paged.map((c, i) => (
           <TR key={i}>
-            <TD style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 13 }}>{c.custNo}</TD>
+            <TD style={{ fontFamily: "'Inter', sans-serif", fontWeight: 700, fontSize: 13 }}>{c.custNo}</TD>
             <TD style={{ fontWeight: 500 }}>{c.custDesc}</TD>
             <TD style={{ fontFamily: "monospace", color: "var(--ink-60)" }}>{c.custMobile ?? "—"}</TD>
             <TD style={{ color: "var(--ink-60)", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

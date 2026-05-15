@@ -34,7 +34,7 @@ const CalendarInput: React.FC<Props> = ({ label, value, onChange }) => {
           padding: "9px 12px",
           border: "1.5px solid var(--ink-10, #e8eef0)",
           borderRadius: "var(--radius-md, 10px)",
-          fontSize: 13, fontFamily: "'DM Sans', sans-serif",
+          fontSize: 13, fontFamily: "'Inter', sans-serif",
           background: "var(--white, #fff)", color: "var(--ink, #0b1215)",
           outline: "none", cursor: "pointer",
         }}

@@ -45,7 +45,7 @@ export const StatCard: React.FC<StatCardProps> = ({
         }}>{delta}</span>
       )}
     </div>
-    <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 28, fontWeight: 800, color: "var(--ink)", lineHeight: 1 }}>{value}</div>
+    <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 28, fontWeight: 800, color: "var(--ink)", lineHeight: 1 }}>{value}</div>
     <div style={{ fontSize: 12.5, color: "var(--ink-60)", marginTop: 5, fontWeight: 500 }}>{label}</div>
   </div>
 );
@@ -95,7 +95,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ title, subtitle, action 
     marginBottom: 24,
   }}>
     <div>
-      <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800, color: "var(--ink)", marginBottom: 4 }}>{title}</h1>
+      <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: 22, fontWeight: 800, color: "var(--ink)", marginBottom: 4 }}>{title}</h1>
       {subtitle && <p style={{ fontSize: 13, color: "var(--ink-60)" }}>{subtitle}</p>}
     </div>
     {action && <div>{action}</div>}
@@ -128,10 +128,11 @@ interface DataTableProps {
   empty?: boolean;
   emptyText?: string;
   loading?: boolean;
+  topRow?: React.ReactNode;   // optional extra <tr> rendered at top of <thead>
 }
 
 export const DataTable: React.FC<DataTableProps> = ({
-  headers, children, empty, emptyText = "No records found", loading
+  headers, children, empty, emptyText = "No records found", loading, topRow
 }) => (
   <div style={{
     background: "var(--white)",
@@ -142,6 +143,7 @@ export const DataTable: React.FC<DataTableProps> = ({
     <div style={{ overflowX: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 600 }}>
         <thead>
+          {topRow}
           <tr style={{ background: "var(--ink-5)", borderBottom: "1px solid var(--ink-10)" }}>
             {headers.map(h => (
               <th key={h} style={{
@@ -206,7 +208,7 @@ export const Btn: React.FC<BtnProps> = ({
   const base: React.CSSProperties = {
     display: "inline-flex", alignItems: "center", gap: 6,
     border: "none", borderRadius: "var(--radius-md)",
-    fontFamily: "'DM Sans', sans-serif", fontWeight: 600,
+    fontFamily: "'Inter', sans-serif", fontWeight: 600,
     cursor: disabled ? "not-allowed" : "pointer",
     transition: "all 0.15s ease",
     opacity: disabled ? 0.55 : 1,
@@ -230,7 +232,7 @@ export const Btn: React.FC<BtnProps> = ({
       style={{ ...base, ...variants[variant], ...style }}
       onMouseEnter={e => {
         if (!disabled) {
-          if (variant === "primary") (e.currentTarget as HTMLElement).style.background = "#0a4a2e";
+          if (variant === "primary") (e.currentTarget as HTMLElement).style.background = "var(--brand-dark)";
           else if (variant === "danger") (e.currentTarget as HTMLElement).style.background = "#fee2e2";
           else (e.currentTarget as HTMLElement).style.background = "var(--ink-10)";
         }
@@ -274,7 +276,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
         padding: "9px 12px 9px 36px",
         border: "1.5px solid var(--ink-10)",
         borderRadius: "var(--radius-md)",
-        fontSize: 13, fontFamily: "'DM Sans', sans-serif",
+        fontSize: 13, fontFamily: "'Inter', sans-serif",
         background: "var(--white)", color: "var(--ink)",
         outline: "none", transition: "border 0.2s",
       }}
@@ -300,7 +302,7 @@ export const Select: React.FC<SelectProps> = ({ value, onChange, children, style
       padding: "9px 32px 9px 12px",
       border: "1.5px solid var(--ink-10)",
       borderRadius: "var(--radius-md)",
-      fontSize: 13, fontFamily: "'DM Sans', sans-serif",
+      fontSize: 13, fontFamily: "'Inter', sans-serif",
       background: "var(--white)", color: "var(--ink)",
       outline: "none", cursor: "pointer", appearance: "none",
       backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238fa0a8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
@@ -341,10 +343,11 @@ interface FieldProps {
   label: string;
   children: React.ReactNode;
   required?: boolean;
+  style?: React.CSSProperties;
 }
 
-export const Field: React.FC<FieldProps> = ({ label, children, required }) => (
-  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+export const Field: React.FC<FieldProps> = ({ label, children, required, style }) => (
+  <div style={{ display: "flex", flexDirection: "column", gap: 6, ...style }}>
     <label style={{
       fontSize: 11.5, fontWeight: 700, color: "var(--ink-60)",
       textTransform: "uppercase", letterSpacing: "0.06em",
@@ -368,7 +371,7 @@ export const TextInput: React.FC<{
       padding: "10px 14px",
       border: "1.5px solid var(--ink-10)",
       borderRadius: "var(--radius-md)",
-      fontSize: 13.5, fontFamily: "'DM Sans', sans-serif",
+      fontSize: 13.5, fontFamily: "'Inter', sans-serif",
       background: "var(--white)", color: "var(--ink)",
       outline: "none", transition: "border 0.2s",
     }}

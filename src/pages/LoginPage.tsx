@@ -9,6 +9,42 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const features: { icon: React.ReactNode; text: string }[] = [
+    {
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+        </svg>
+      ),
+      text: "Distributor to retail delivery management",
+    },
+    {
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
+          <path d="M9 7h6"/><path d="M9 11h3"/>
+        </svg>
+      ),
+      text: "OTP-based delivery confirmation",
+    },
+    {
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+      ),
+      text: "Google Maps routing to retail outlets",
+    },
+    {
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      ),
+      text: "Day-end approval workflow",
+    },
+  ];
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -38,7 +74,7 @@ const Login: React.FC = () => {
       {/* Left decorative panel */}
       <div style={{
         width: "45%",
-        background: "linear-gradient(155deg, #0d5c3a 0%, #0b1215 60%)",
+        background: "linear-gradient(155deg, #7f35b2 0%, #1e0a3c 60%)",
         padding: "60px 56px",
         display: "flex",
         flexDirection: "column",
@@ -67,33 +103,28 @@ const Login: React.FC = () => {
               </svg>
             </div>
             <div>
-              <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 18, color: "#fff" }}>Device4Autism</div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 1 }}>Distributor Delivery System</div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: 800, fontSize: 18, color: "#fff" }}>Direco</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 1 }}>Distributor to Retail Connect</div>
             </div>
           </div>
 
-          <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 36, fontWeight: 800, color: "#fff", lineHeight: 1.15, marginBottom: 16 }}>
-            Smarter delivery,<br />every single day.
+          <h2 style={{ fontFamily: "'Inter', sans-serif", fontSize: 36, fontWeight: 800, color: "#fff", lineHeight: 1.15, marginBottom: 16 }}>
+            Distributor to<br />Retail Connect.
           </h2>
           <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, maxWidth: 360 }}>
-            Manage your delivery agents, track picklist assignments, upload invoices and monitor day-end settlements — all in one place.
+            Seamlessly connect distributors with retail outlets — track deliveries, confirm orders with OTP, and navigate routes via Google Maps.
           </p>
         </div>
 
         {/* Feature bullets */}
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          {[
-            { icon: "📦", text: "Real-time delivery tracking" },
-            { icon: "📊", text: "Excel invoice upload & processing" },
-            { icon: "🚚", text: "Agent assignment & routing" },
-            { icon: "✅", text: "Day-end approval workflow" },
-          ].map((f, i) => (
+          {features.map((f, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <div style={{
                 width: 34, height: 34, borderRadius: 9,
-                background: "rgba(255,255,255,0.07)",
+                background: "rgba(255,255,255,0.12)",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 16, flexShrink: 0,
+                flexShrink: 0,
               }}>{f.icon}</div>
               <span style={{ fontSize: 13.5, color: "rgba(255,255,255,0.65)" }}>{f.text}</span>
             </div>
@@ -117,7 +148,7 @@ const Login: React.FC = () => {
         }}>
           <div style={{ marginBottom: 36 }}>
             <h1 style={{
-              fontFamily: "'Syne', sans-serif",
+              fontFamily: "'Inter', sans-serif",
               fontSize: 28, fontWeight: 800,
               color: "var(--ink)", marginBottom: 8,
             }}>Welcome back</h1>
@@ -152,7 +183,7 @@ const Login: React.FC = () => {
                   width: "100%", padding: "12px 14px",
                   border: "1.5px solid var(--ink-10)",
                   borderRadius: "var(--radius-md)",
-                  fontSize: 14, fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 14, fontFamily: "'Inter', sans-serif",
                   background: "var(--white)", color: "var(--ink)",
                   outline: "none", transition: "border 0.2s",
                 }}
@@ -176,7 +207,7 @@ const Login: React.FC = () => {
                   width: "100%", padding: "12px 14px",
                   border: "1.5px solid var(--ink-10)",
                   borderRadius: "var(--radius-md)",
-                  fontSize: 14, fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 14, fontFamily: "'Inter', sans-serif",
                   background: "var(--white)", color: "var(--ink)",
                   outline: "none", transition: "border 0.2s",
                 }}
@@ -194,25 +225,32 @@ const Login: React.FC = () => {
                 color: "#fff", border: "none",
                 borderRadius: "var(--radius-md)",
                 fontSize: 14, fontWeight: 700,
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: "'Inter', sans-serif",
                 cursor: loading ? "not-allowed" : "pointer",
                 transition: "all 0.2s",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
               }}
-              onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLElement).style.background = "#0a4a2e"; }}
+              onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLElement).style.background = "var(--brand-dark)"; }}
               onMouseLeave={e => { if (!loading) (e.currentTarget as HTMLElement).style.background = "var(--brand)"; }}
             >
               {loading ? (
                 <>
                   <div style={{ width: 15, height: 15, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
-                  Signing in…
+                  Signing in...
                 </>
-              ) : "Sign In →"}
+              ) : (
+                <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  Sign In
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                  </svg>
+                </span>
+              )}
             </button>
           </form>
 
           <p style={{ marginTop: 24, fontSize: 12, color: "var(--ink-40)", textAlign: "center" }}>
-            © 2026 Devine Distributors Pvt. Ltd. · v1.0.0
+            &copy; 2026 Direco &middot; Distributor to Retail Connect &middot; v1.0.0
           </p>
         </div>
       </div>

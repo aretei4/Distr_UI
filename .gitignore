@@ -12,8 +12,10 @@
 /package-lock.json
 /yarn.lock
 
-# Environment files
-/.env
+# Environment files — never commit
+.env
+.env.local
+.env.*.local
 
 # Angular CLI and build artefacts
 /.angular-cli.json

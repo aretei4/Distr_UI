@@ -123,7 +123,7 @@ const MainLayout: React.FC = () => {
       {/* ── SIDEBAR ── */}
       <aside style={{
         width: collapsed ? "64px" : "var(--sidebar-width)",
-        background: "var(--ink)",
+        background: "var(--sidebar-bg)",
         display: "flex",
         flexDirection: "column",
         flexShrink: 0,
@@ -156,11 +156,11 @@ const MainLayout: React.FC = () => {
           </div>
           {!collapsed && (
             <div style={{ overflow: "hidden" }}>
-              <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 14, color: "#fff", whiteSpace: "nowrap" }}>
-                Device4Autism
+              <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: 800, fontSize: 14, color: "#fff", whiteSpace: "nowrap" }}>
+                Direco
               </div>
               <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", whiteSpace: "nowrap" }}>
-                Delivery System
+                Distributor to Retail Connect
               </div>
             </div>
           )}
@@ -186,7 +186,7 @@ const MainLayout: React.FC = () => {
                   textDecoration: "none",
                   color: active ? "#fff" : "rgba(255,255,255,0.5)",
                   background: active ? "rgba(255,255,255,0.1)" : "transparent",
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: "'Inter', sans-serif",
                   fontSize: 13.5,
                   fontWeight: active ? 600 : 400,
                   transition: "all 0.15s ease",
@@ -210,7 +210,7 @@ const MainLayout: React.FC = () => {
                 {active && (
                   <div style={{
                     position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)",
-                    width: 3, height: "60%", background: "var(--brand-mid)",
+                    width: 3, height: "60%", background: "#c77dff",
                     borderRadius: "0 3px 3px 0",
                   }} />
                 )}
@@ -294,7 +294,7 @@ const MainLayout: React.FC = () => {
         }}>
           <div>
             <h1 style={{
-              fontFamily: "'Syne', sans-serif",
+              fontFamily: "'Inter', sans-serif",
               fontSize: 16, fontWeight: 700, color: "var(--ink)",
             }}>
               {NAV_ITEMS.find(n =>

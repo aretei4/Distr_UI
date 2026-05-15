@@ -8,6 +8,7 @@ interface SalesEntry {
   custDesc: string; salesRepNo: string; salesRepName: string;
   route: string; routeName: string; billingDate: number;
   warehouse: string; netValue: number; updateDate: number; buId: number;
+  companyName: string;
 }
 
 const SalesTable: React.FC = () => {
@@ -87,18 +88,16 @@ const SalesTable: React.FC = () => {
       {/* Toolbar */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <SearchInput value={search} onChange={setSearch} placeholder="Search picklist or customer…" width="320px" />
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          {selected.length > 0 && (
-            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--brand)", background: "var(--brand-light)", padding: "4px 12px", borderRadius: 50 }}>
-              {selected.length} selected
-            </span>
-          )}
-        </div>
+        {selected.length > 0 && (
+          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--brand)", background: "var(--brand-light)", padding: "4px 12px", borderRadius: 50 }}>
+            {selected.length} selected
+          </span>
+        )}
       </div>
 
       <div style={{ flex: 1, overflow: "hidden" }}>
         <DataTable
-          headers={["☐", "Picklist No", "Customer No", "Customer Name", "Net Value", "Billing Date"]}
+          headers={["☐", "Picklist No", "Customer No", "Customer Name", "Company", "Net Value", "Billing Date"]}
           loading={loading}
           empty={filteredSales.length === 0}
           emptyText="No matching records found"
@@ -112,15 +111,12 @@ const SalesTable: React.FC = () => {
                 style={{ width: 15, height: 15, cursor: "pointer", accentColor: "var(--brand)" }}
               />
             </td>
-            <td colSpan={5} style={{ padding: "11px 0", fontSize: 11, color: "var(--ink-40)" }}>
+            <td colSpan={6} style={{ padding: "11px 0", fontSize: 11, color: "var(--ink-40)" }}>
               {selected.length > 0 ? `${selected.length} of ${filteredSales.length} rows selected` : "Click rows to select"}
             </td>
           </tr>
           {filteredSales.map(row => (
-            <TR
-              key={row.picklistNo}
-              onClick={() => toggleRow(row.picklistNo)}
-            >
+            <TR key={row.picklistNo} onClick={() => toggleRow(row.picklistNo)}>
               <TD style={{ width: 48 }}>
                 <input
                   type="checkbox"
@@ -133,10 +129,11 @@ const SalesTable: React.FC = () => {
               <TD style={{
                 fontWeight: 600,
                 color: selected.includes(row.picklistNo) ? "var(--brand)" : "var(--ink)",
-                fontFamily: "'Syne', sans-serif", fontSize: 13,
+                fontFamily: "'Inter', sans-serif", fontSize: 13,
               }}>{row.picklistNo}</TD>
               <TD style={{ color: "var(--ink-60)" }}>{row.customerNo}</TD>
               <TD style={{ fontWeight: 500 }}>{row.custDesc}</TD>
+              <TD style={{ color: "var(--ink-60)", fontSize: 12.5 }}>{row.companyName || "—"}</TD>
               <TD style={{ fontWeight: 700, color: "var(--ink)", textAlign: "right" }}>
                 ₹{row.netValue.toLocaleString("en-IN")}
               </TD>

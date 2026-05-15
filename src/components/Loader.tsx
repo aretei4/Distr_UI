@@ -9,12 +9,12 @@ const Loader: React.FC = () => (
     <div style={{
       width: 36, height: 36,
       border: "3px solid #e8eef0",
-      borderTopColor: "#0d5c3a",
+      borderTopColor: "#7f35b2",
       borderRadius: "50%",
       animation: "spin 0.7s linear infinite",
     }} />
     <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    <p style={{ marginTop: 14, fontSize: 13, color: "#8fa0a8", fontFamily: "'DM Sans', sans-serif" }}>
+    <p style={{ marginTop: 14, fontSize: 13, color: "#8fa0a8", fontFamily: "'Inter', sans-serif" }}>
       Loading…
     </p>
   </div>

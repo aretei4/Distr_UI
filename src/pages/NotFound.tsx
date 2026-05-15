@@ -8,10 +8,10 @@ const NotFound: React.FC = () => (
     minHeight: "60vh", textAlign: "center",
   }}>
     <div style={{
-      fontFamily: "'Syne', sans-serif", fontSize: 80, fontWeight: 800,
+      fontFamily: "'Inter', sans-serif", fontSize: 80, fontWeight: 800,
       color: "var(--ink-20)", lineHeight: 1,
     }}>404</div>
-    <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 700, color: "var(--ink)", margin: "16px 0 8px" }}>
+    <h2 style={{ fontFamily: "'Inter', sans-serif", fontSize: 22, fontWeight: 700, color: "var(--ink)", margin: "16px 0 8px" }}>
       Page not found
     </h2>
     <p style={{ fontSize: 14, color: "var(--ink-60)", marginBottom: 24 }}>

@@ -1,9 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
 import { saveTemplate } from "../services/template.service";
-import { PageHeader, Card, Btn, Field, Select } from "../components/ui";
+import { ApiEndpoints } from "../constants/config";
+import { PageHeader, Card, Btn, Field, Select, TextInput } from "../components/ui";
 
-const numberToColumnLetter = (num: number) => {
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+const colLetter = (num: number) => {
   let letters = "";
   while (num >= 0) {
     letters = String.fromCharCode((num % 26) + 65) + letters;
@@ -12,20 +15,129 @@ const numberToColumnLetter = (num: number) => {
   return letters;
 };
 
+// ── Constants ─────────────────────────────────────────────────────────────────
+
 const TEMPLATE_FIELDS: Record<string, string[]> = {
   customer: ["Name", "Mobile", "address", "lat", "lon", "pin"],
-  delivery: ["Name", "Mobile", "address", "lat", "lon", "pin"],
-  sales:    ["PicklistNo", "CustomerName", "CustomerNo", "NetValue", "BillingDate"],
+  delivery: [
+    "Name", "Mobile", "Alternative Mobile",
+    "Address Line 1", "Address Line 2", "Address Line 3",
+    "City", "Pin Code", "Father Name",
+    "Aadhar No", "PAN Card", "Bank Account", "Date of Joining",
+  ],
+  sales: ["PicklistNo", "CustomerName", "CustomerNo", "NetValue", "BillingDate"],
 };
 
+const TYPE_LABELS: Record<string, string> = {
+  customer: "Customer",
+  delivery: "Delivery Agent",
+  sales:    "Invoice / Sales",
+};
+
+// ── Step indicator ────────────────────────────────────────────────────────────
+
+const StepBadge: React.FC<{ n: number; active: boolean; done: boolean }> = ({ n, active, done }) => (
+  <div style={{
+    width: 28, height: 28, borderRadius: "50%",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    fontSize: 12, fontWeight: 700, flexShrink: 0,
+    background: done ? "var(--brand)" : active ? "var(--brand-light)" : "var(--ink-5)",
+    color: done ? "#fff" : active ? "var(--brand)" : "var(--ink-40)",
+    border: active && !done ? "2px solid var(--brand)" : "2px solid transparent",
+    transition: "all 0.2s",
+  }}>
+    {done
+      ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+      : n}
+  </div>
+);
+
+const Step: React.FC<{ n: number; label: string; current: number; children: React.ReactNode }> = ({
+  n, label, current, children,
+}) => {
+  const active = current === n;
+  const done   = current > n;
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: active ? 14 : 0 }}>
+        <StepBadge n={n} active={active} done={done} />
+        <span style={{
+          fontSize: 13.5, fontWeight: 700,
+          color: active ? "var(--ink)" : done ? "var(--brand)" : "var(--ink-40)",
+        }}>{label}</span>
+        {done && (
+          <span style={{
+            fontSize: 11.5, color: "var(--brand)",
+            background: "var(--brand-light)", padding: "2px 10px", borderRadius: 50,
+          }}>✓ Done</span>
+        )}
+      </div>
+      {active && (
+        <div style={{ marginLeft: 38, paddingLeft: 10, borderLeft: "2px solid var(--ink-10)" }}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Main component ────────────────────────────────────────────────────────────
+
 const TemplateMappingPage: React.FC = () => {
-  const [templateName, setTemplateName]   = useState("");
+  // companies
+  const [companies, setCompanies]         = useState<string[]>([]);
+  const [companyName, setCompanyName]     = useState("");
+  const [addingNew, setAddingNew]         = useState(false);
+  const [newCompany, setNewCompany]       = useState("");
+
+  // template type
   const [templateType, setTemplateType]   = useState("");
   const [fields, setFields]               = useState<string[]>([]);
+
+  // file / headers
   const [headers, setHeaders]             = useState<string[]>([]);
-  const [mappings, setMappings]           = useState<Record<string, string>>({});
   const [uploadMsg, setUploadMsg]         = useState("");
+
+  // mappings
+  const [mappings, setMappings]           = useState<Record<string, string>>({});
   const [errorMsg, setErrorMsg]           = useState("");
+  const [saving, setSaving]               = useState(false);
+
+  // which step is active 1-4
+  const step =
+    !companyName ? 1 :
+    !templateType ? 2 :
+    headers.length === 0 ? 3 : 4;
+
+  // Load company list on mount
+  useEffect(() => {
+    fetch(ApiEndpoints.TEMPLATE_COMPANIES)
+      .then(r => r.ok ? r.json() : [])
+      .then((data: string[]) => setCompanies(data))
+      .catch(() => {});
+  }, []);
+
+  // When company + type combo changes, try to pre-load existing mappings
+  useEffect(() => {
+    if (!companyName || !templateType) return;
+    fetch(ApiEndpoints.TEMPLATES_BY_COMPANY(companyName))
+      .then(r => r.ok ? r.json() : [])
+      .then((list: { templateType: string; mappings: Record<string, string> }[]) => {
+        const existing = list.find(t => t.templateType === templateType);
+        if (existing?.mappings) setMappings(existing.mappings);
+        else setMappings({});
+      })
+      .catch(() => setMappings({}));
+  }, [companyName, templateType]);
+
+  const confirmCompany = () => {
+    const name = addingNew ? newCompany.trim() : companyName;
+    if (!name) return;
+    setCompanyName(name);
+    setAddingNew(false);
+    setNewCompany("");
+    if (!companies.includes(name)) setCompanies(prev => [...prev, name].sort());
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -35,88 +147,247 @@ const TemplateMappingPage: React.FC = () => {
     const sheet = wb.Sheets[wb.SheetNames[0]];
     const rows: any[] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
     setHeaders(rows[0] || []);
-    setUploadMsg(`✅ "${file.name}" uploaded`);
+    setUploadMsg(`✅ "${file.name}" — ${(rows[0] || []).length} columns detected`);
     setMappings({});
     setErrorMsg("");
   };
 
   const handleColumnSelect = (field: string, column: string) => {
-    const dup = Object.entries(mappings).find(([col]) => col === column);
-    if (dup) { setErrorMsg(`Column ${column} already mapped to "${dup[1]}"`); return; }
-    const updated = Object.fromEntries(Object.entries(mappings).filter(([, v]) => v !== field));
-    updated[column] = field;
-    setMappings(updated);
+    if (!column) {
+      setMappings(prev => {
+        const next = { ...prev };
+        Object.keys(next).forEach(k => { if (next[k] === field) delete next[k]; });
+        return next;
+      });
+      return;
+    }
+    const dup = Object.entries(mappings).find(([col, f]) => col === column && f !== field);
+    if (dup) { setErrorMsg(`Column ${column} is already mapped to "${dup[1]}"`); return; }
+    setMappings(prev => {
+      const next = Object.fromEntries(Object.entries(prev).filter(([, v]) => v !== field));
+      next[column] = field;
+      return next;
+    });
     setErrorMsg("");
   };
 
   const handleSave = async () => {
-    if (!templateName || !templateType) { alert("Fill template type and name."); return; }
-    if (Object.keys(mappings).length !== fields.length) { alert("Map all fields first."); return; }
+    if (!companyName || !templateType) return;
+    if (Object.keys(mappings).length !== fields.length) {
+      setErrorMsg("Map all fields before saving.");
+      return;
+    }
+    setSaving(true);
     try {
-      await saveTemplate({ templateName, templateType, mappings });
+      await saveTemplate({ companyName, templateType, mappings });
+      if (!companies.includes(companyName)) setCompanies(prev => [...prev, companyName].sort());
       alert("✅ Template saved!");
-    } catch { alert("❌ Save failed"); }
+    } catch {
+      alert("❌ Save failed. Check your connection.");
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const resetAll = () => {
+    setCompanyName(""); setTemplateType(""); setHeaders([]);
+    setMappings({}); setUploadMsg(""); setErrorMsg("");
+    setAddingNew(false); setNewCompany("");
+  };
+
+  const activeCompany = addingNew ? newCompany.trim() : companyName;
 
   return (
     <div className="animate-fade-up">
-      <PageHeader title="Master Template" subtitle="Map Excel columns to system fields" />
+      <PageHeader
+        title="Master Template"
+        subtitle="Map your Excel columns to system fields"
+        action={companyName && (
+          <Btn variant="ghost" onClick={resetAll}>Start Over</Btn>
+        )}
+      />
 
-      <Card style={{ maxWidth: 680 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
-          <Field label="Template Type" required>
-            <Select value={templateType} onChange={v => { setTemplateType(v); setFields(TEMPLATE_FIELDS[v] || []); setMappings({}); setHeaders([]); setUploadMsg(""); }}>
-              <option value="">Select type…</option>
-              <option value="delivery">Delivery Agent</option>
-              <option value="customer">Customer</option>
-              <option value="sales">Invoice / Sales</option>
-            </Select>
-          </Field>
-          <Field label="Template Name" required>
-            <input value={templateName} onChange={e => setTemplateName(e.target.value)}
-              placeholder="e.g. April Invoice Template"
-              style={{ padding: "10px 14px", border: "1.5px solid var(--ink-10)", borderRadius: "var(--radius-md)", fontSize: 13.5, fontFamily: "'DM Sans', sans-serif", outline: "none" }} />
-          </Field>
-        </div>
+      <Card style={{ maxWidth: 700 }}>
 
-        <Field label="Upload Sample Excel">
-          <input type="file" accept=".xlsx,.xls" onChange={handleFileUpload}
-            style={{ padding: "8px 0", fontSize: 13, fontFamily: "'DM Sans', sans-serif" }} />
-        </Field>
-        {uploadMsg && <p style={{ fontSize: 12.5, color: "var(--success)", marginTop: 8 }}>{uploadMsg}</p>}
-        {errorMsg  && <p style={{ fontSize: 12.5, color: "var(--danger)",  marginTop: 8 }}>{errorMsg}</p>}
-
-        {headers.length > 0 && fields.length > 0 && (
-          <div style={{ marginTop: 24 }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)", marginBottom: 14 }}>Map Fields</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {fields.map(field => (
-                <div key={field} style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                  <span style={{ minWidth: 140, fontSize: 13.5, fontWeight: 600, color: "var(--ink)" }}>{field}</span>
+        {/* ── Step 1: Company ─────────────────────────────────────────── */}
+        <Step n={1} label="Select Company" current={step}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {!addingNew ? (
+              <>
+                <Field label="Company Name" required>
                   <Select
-                    value={Object.entries(mappings).find(([, v]) => v === field)?.[0] || ""}
-                    onChange={v => handleColumnSelect(field, v)}
-                    style={{ flex: 1 }}
+                    value={companyName}
+                    onChange={v => {
+                      if (v === "__add__") { setAddingNew(true); setCompanyName(""); }
+                      else { setCompanyName(v); setTemplateType(""); setHeaders([]); setMappings({}); }
+                    }}
                   >
-                    <option value="">Select column…</option>
-                    {headers.map((h, i) => {
-                      const letter = numberToColumnLetter(i);
-                      return <option key={letter} value={letter}>{letter} — {h}</option>;
-                    })}
+                    <option value="">Choose company…</option>
+                    {companies.map(c => <option key={c} value={c}>{c}</option>)}
+                    <option value="__add__">＋ Add new company</option>
                   </Select>
-                  {Object.entries(mappings).find(([, v]) => v === field) && (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0d7a4e" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  )}
+                </Field>
+                {companyName && (
+                  <Btn variant="primary" onClick={() => setTemplateType("")}>
+                    Continue with {companyName} →
+                  </Btn>
+                )}
+              </>
+            ) : (
+              <>
+                <Field label="New Company Name" required>
+                  <TextInput
+                    value={newCompany}
+                    onChange={setNewCompany}
+                    placeholder="e.g. Devine Distributors Pvt. Ltd."
+                  />
+                </Field>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <Btn variant="primary" onClick={confirmCompany} disabled={!newCompany.trim()}>
+                    Add Company →
+                  </Btn>
+                  <Btn variant="secondary" onClick={() => setAddingNew(false)}>Cancel</Btn>
                 </div>
-              ))}
+              </>
+            )}
+          </div>
+
+          {/* summary when done */}
+          {step > 1 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+              <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--ink)" }}>{companyName}</span>
+              <button
+                onClick={() => { setCompanyName(""); setTemplateType(""); setHeaders([]); setMappings({}); }}
+                style={{ background: "none", border: "none", cursor: "pointer", fontSize: 11.5, color: "var(--brand)", padding: 0 }}
+              >change</button>
             </div>
-            <div style={{ marginTop: 24 }}>
-              <Btn variant="primary" onClick={handleSave}
-                disabled={!templateName || !templateType || Object.keys(mappings).length !== fields.length}>
-                Save Template
+          )}
+        </Step>
+
+        {/* ── Step 2: Template Type ───────────────────────────────────── */}
+        {step >= 2 && (
+          <Step n={2} label="Select Template Type" current={step}>
+            <Field label="Template Type" required>
+              <Select
+                value={templateType}
+                onChange={v => {
+                  setTemplateType(v);
+                  setFields(TEMPLATE_FIELDS[v] || []);
+                  setHeaders([]);
+                  setUploadMsg("");
+                  setMappings({});
+                }}
+              >
+                <option value="">Select type…</option>
+                {Object.entries(TYPE_LABELS).map(([k, label]) => (
+                  <option key={k} value={k}>{label}</option>
+                ))}
+              </Select>
+            </Field>
+
+            {step > 2 && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+                <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--ink)" }}>
+                  {TYPE_LABELS[templateType]}
+                </span>
+                <button
+                  onClick={() => { setTemplateType(""); setHeaders([]); setMappings({}); }}
+                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: 11.5, color: "var(--brand)", padding: 0 }}
+                >change</button>
+              </div>
+            )}
+          </Step>
+        )}
+
+        {/* ── Step 3: Upload sample Excel ─────────────────────────────── */}
+        {step >= 3 && (
+          <Step n={3} label="Upload Sample Excel (to detect columns)" current={step}>
+            <Field label="Sample .xlsx file">
+              <input
+                type="file" accept=".xlsx,.xls"
+                onChange={handleFileUpload}
+                style={{ padding: "8px 0", fontSize: 13, fontFamily: "'Inter', sans-serif" }}
+              />
+            </Field>
+            {uploadMsg && (
+              <p style={{ fontSize: 12.5, color: "var(--brand)", marginTop: 8 }}>{uploadMsg}</p>
+            )}
+
+            {/* fields list as a hint */}
+            <div style={{ marginTop: 12 }}>
+              <p style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-40)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Required fields
+              </p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {fields.map(f => (
+                  <span key={f} style={{
+                    fontSize: 11.5, padding: "3px 10px",
+                    borderRadius: 50, fontWeight: 600,
+                    background: "var(--ink-5)", color: "var(--ink-60)",
+                  }}>{f}</span>
+                ))}
+              </div>
+            </div>
+
+            {step > 3 && (
+              <p style={{ fontSize: 12.5, color: "var(--brand)", marginTop: 8 }}>{uploadMsg}</p>
+            )}
+          </Step>
+        )}
+
+        {/* ── Step 4: Map fields ──────────────────────────────────────── */}
+        {step >= 4 && (
+          <Step n={4} label="Map Fields" current={step}>
+            {errorMsg && (
+              <p style={{ fontSize: 12.5, color: "var(--danger)", marginBottom: 12 }}>{errorMsg}</p>
+            )}
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {fields.map(field => {
+                const mapped = Object.entries(mappings).find(([, v]) => v === field)?.[0] || "";
+                return (
+                  <div key={field} style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                    <span style={{ minWidth: 150, fontSize: 13.5, fontWeight: 600, color: "var(--ink)" }}>
+                      {field}
+                    </span>
+                    <Select
+                      value={mapped}
+                      onChange={v => handleColumnSelect(field, v)}
+                      style={{ flex: 1 }}
+                    >
+                      <option value="">Select column…</option>
+                      {headers.map((h, i) => {
+                        const letter = colLetter(i);
+                        return <option key={letter} value={letter}>{letter} — {h}</option>;
+                      })}
+                    </Select>
+                    {mapped && (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0d7a4e" strokeWidth="2.5" strokeLinecap="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div style={{ marginTop: 22, display: "flex", gap: 10 }}>
+              <Btn
+                variant="primary"
+                onClick={handleSave}
+                disabled={saving || Object.keys(mappings).length !== fields.length}
+              >
+                {saving ? "Saving…" : "Save Template"}
+              </Btn>
+              <Btn variant="secondary" onClick={() => { setMappings({}); setHeaders([]); setUploadMsg(""); }}>
+                Reset Mappings
               </Btn>
             </div>
-          </div>
+
+            {/* progress */}
+            <p style={{ fontSize: 11.5, color: "var(--ink-40)", marginTop: 10 }}>
+              {Object.keys(mappings).length} / {fields.length} fields mapped
+            </p>
+          </Step>
         )}
       </Card>
     </div>

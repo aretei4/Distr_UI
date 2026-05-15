@@ -42,7 +42,7 @@ function RejectModal({
           boxShadow: "var(--shadow-lg)", animation: "fadeUp 0.25s ease",
         }}
       >
-        <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 800, marginBottom: 8 }}>
+        <h2 style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, fontWeight: 800, marginBottom: 8 }}>
           Reject Request
         </h2>
         <p style={{ fontSize: 13.5, color: "var(--ink-60)", marginBottom: 20 }}>
@@ -56,7 +56,7 @@ function RejectModal({
           style={{
             width: "100%", padding: "12px 14px",
             border: "1.5px solid var(--ink-10)", borderRadius: "var(--radius-md)",
-            fontSize: 13.5, fontFamily: "'DM Sans', sans-serif",
+            fontSize: 13.5, fontFamily: "'Inter', sans-serif",
             color: "var(--ink)", resize: "none", outline: "none",
             transition: "border 0.2s",
           }}
@@ -176,7 +176,7 @@ export default function DayEnd() {
             padding: "10px 18px", borderRadius: "var(--radius-md)",
             background: s.bg, display: "flex", alignItems: "center", gap: 10,
           }}>
-            <span style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800, color: s.color }}>{s.count}</span>
+            <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 22, fontWeight: 800, color: s.color }}>{s.count}</span>
             <span style={{ fontSize: 12, fontWeight: 700, color: s.color }}>{s.label}</span>
           </div>
         ))}
@@ -200,7 +200,7 @@ export default function DayEnd() {
               style={{
                 padding: "8px 12px", border: "1.5px solid var(--ink-10)",
                 borderRadius: "var(--radius-md)", fontSize: 13,
-                fontFamily: "'DM Sans', sans-serif", background: "var(--white)",
+                fontFamily: "'Inter', sans-serif", background: "var(--white)",
                 color: "var(--ink)", outline: "none", cursor: "pointer",
               }}
             />
@@ -211,7 +211,7 @@ export default function DayEnd() {
               style={{
                 padding: "8px 12px", border: "1.5px solid var(--ink-10)",
                 borderRadius: "var(--radius-md)", fontSize: 13,
-                fontFamily: "'DM Sans', sans-serif", background: "var(--white)",
+                fontFamily: "'Inter', sans-serif", background: "var(--white)",
                 color: "var(--ink)", outline: "none", cursor: "pointer",
               }}
             />
@@ -244,7 +244,7 @@ export default function DayEnd() {
             </TD>
             <TD style={{ color: "var(--ink-60)" }}>{row.requestDate?.split(" ")[0] ?? "—"}</TD>
             <TD><StatusBadge status={row.status} /></TD>
-            <TD style={{ fontWeight: 700, color: "var(--ink)", fontFamily: "'Syne', sans-serif" }}>
+            <TD style={{ fontWeight: 700, color: "var(--ink)", fontFamily: "'Inter', sans-serif" }}>
               ₹{row.totalAmount?.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
             </TD>
             <TD style={{ color: "var(--ink-40)", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

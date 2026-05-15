@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "app-preview",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "D:/project/distributor/wsp/Quick_Connect/design", "--no-clipboard", "-l", "3333"],
+      "port": 3333
+    }
+  ]
+}

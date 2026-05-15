@@ -41,7 +41,7 @@ const DeliveryPage: React.FC = () => {
           <input
             value={deliveryIdFilter} onChange={e => setIdFilter(e.target.value)}
             placeholder="Filter by ID"
-            style={{ padding: "9px 12px", border: "1.5px solid var(--ink-10)", borderRadius: "var(--radius-md)", fontSize: 13, fontFamily: "'DM Sans', sans-serif", outline: "none" }}
+            style={{ padding: "9px 12px", border: "1.5px solid var(--ink-10)", borderRadius: "var(--radius-md)", fontSize: 13, fontFamily: "'Inter', sans-serif", outline: "none" }}
           />
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>

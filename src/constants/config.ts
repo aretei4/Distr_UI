@@ -1,10 +1,13 @@
 // src/constants/config.ts
-
-const API_BASE_URL: string = "https://device4autism.in/api";
-// const API_BASE_URL: string = "http://localhost:8080/api";
+// VITE_API_BASE_URL is injected at build time:
+//   dev:    http://localhost:8080/api   (vite dev server proxies)
+//   docker: /api                        (nginx proxies to backend container)
+//   prod:   https://device4autism.in/api
+const API_BASE_URL: string =
+  (import.meta.env.VITE_API_BASE_URL as string) ?? "https://device4autism.in/api";
 
 export const AppConfig = {
-  APP_NAME:     "Distributor Delivery System",
+  APP_NAME:     "Direco — Distributor to Retail Connect",
   API_BASE_URL,
   VERSION:      "1.0.0",
   DATE_FORMAT:  "DD/MM/YYYY",
@@ -29,6 +32,9 @@ export const ApiEndpoints = {
   UPLOAD:               `${API_BASE_URL}/excel/upload`,
   ALL_TEMPLATE:         `${API_BASE_URL}/template/names`,
   SAVE_TEMPLATE:        `${API_BASE_URL}/template/save`,
+  SALES_COMPANIES:      `${API_BASE_URL}/template/sales-companies`,
+  TEMPLATE_COMPANIES:   `${API_BASE_URL}/template/companies`,
+  TEMPLATES_BY_COMPANY: (company: string) => `${API_BASE_URL}/template/by-company/${encodeURIComponent(company)}`,
   DELIVERY_DASHBOARD:   `${API_BASE_URL}/dashboard/delivery-summary`,
   DELIVERY_STATUS:      `${API_BASE_URL}/dashboard/delivery-summary`,
   DAY_END_SUMMARY:      `${API_BASE_URL}/dayend/dayEndSummery`,

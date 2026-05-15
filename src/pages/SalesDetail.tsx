@@ -67,7 +67,7 @@ const SalesDetail: React.FC = () => {
       />
 
       <Card style={{ marginBottom: 20 }}>
-        <p style={{ fontFamily: "'Syne', sans-serif", fontSize: 14, fontWeight: 700, marginBottom: 16, color: "var(--ink)" }}>
+        <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 700, marginBottom: 16, color: "var(--ink)" }}>
           Assignment Details
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 14 }}>
@@ -80,7 +80,7 @@ const SalesDetail: React.FC = () => {
                 onChange={e => { setQuery(e.target.value); setShowSug(true); setBoyId(null); }}
                 placeholder="Search delivery boy…"
                 autoComplete="off"
-                style={{ width: "100%", padding: "10px 14px", border: "1.5px solid var(--ink-10)", borderRadius: "var(--radius-md)", fontSize: 13.5, fontFamily: "'DM Sans', sans-serif", outline: "none" }}
+                style={{ width: "100%", padding: "10px 14px", border: "1.5px solid var(--ink-10)", borderRadius: "var(--radius-md)", fontSize: 13.5, fontFamily: "'Inter', sans-serif", outline: "none" }}
               />
               {showSug && filtered.length > 0 && (
                 <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "var(--white)", border: "1px solid var(--ink-10)", borderRadius: "var(--radius-md)", boxShadow: "var(--shadow-md)", zIndex: 50, maxHeight: 180, overflowY: "auto" }}>
@@ -103,13 +103,13 @@ const SalesDetail: React.FC = () => {
 
       <div style={{ marginBottom: 16 }}>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search picklist or customer…"
-          style={{ padding: "9px 14px", border: "1.5px solid var(--ink-10)", borderRadius: "var(--radius-md)", fontSize: 13, fontFamily: "'DM Sans', sans-serif", outline: "none", width: 300 }} />
+          style={{ padding: "9px 14px", border: "1.5px solid var(--ink-10)", borderRadius: "var(--radius-md)", fontSize: 13, fontFamily: "'Inter', sans-serif", outline: "none", width: 300 }} />
       </div>
 
       <DataTable headers={["Picklist No", "Customer", "Net Value"]} empty={rows.length === 0}>
         {rows.map(s => (
           <TR key={s.picklistNo}>
-            <TD style={{ fontWeight: 700, fontFamily: "'Syne', sans-serif", color: "var(--brand)" }}>{s.picklistNo}</TD>
+            <TD style={{ fontWeight: 700, fontFamily: "'Inter', sans-serif", color: "var(--brand)" }}>{s.picklistNo}</TD>
             <TD style={{ fontWeight: 500 }}>{s.custDesc}</TD>
             <TD style={{ textAlign: "right", fontWeight: 700 }}>₹{s.netValue.toLocaleString("en-IN")}</TD>
           </TR>

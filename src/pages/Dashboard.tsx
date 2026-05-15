@@ -157,7 +157,7 @@ const Dashboard: React.FC = () => {
       {/* Delivery Boys table */}
       <Card>
         <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h3 style={{ fontFamily: "'Syne', sans-serif", fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>Delivery Agents</h3>
+          <h3 style={{ fontFamily: "'Inter', sans-serif", fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>Delivery Agents</h3>
           <span style={{ fontSize: 12, color: "var(--ink-40)" }}>{deliveryBoys.length} agents</span>
         </div>
         <DataTable

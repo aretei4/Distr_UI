@@ -89,7 +89,7 @@ const DeleteConfirm: React.FC<{
           <path d="M9 6V4h6v2"/>
         </svg>
       </div>
-      <h3 style={{ fontFamily: "'Syne', sans-serif", fontSize: 17, fontWeight: 800, color: "var(--ink)", marginBottom: 6 }}>
+      <h3 style={{ fontFamily: "'Inter', sans-serif", fontSize: 17, fontWeight: 800, color: "var(--ink)", marginBottom: 6 }}>
         Delete User
       </h3>
       <p style={{ fontSize: 13.5, color: "var(--ink-60)", marginBottom: 24, lineHeight: 1.6 }}>
@@ -143,7 +143,7 @@ const UserForm: React.FC<{
         display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
         <div>
-          <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 17, fontWeight: 800, color: "var(--ink)" }}>
+          <h2 style={{ fontFamily: "'Inter', sans-serif", fontSize: 17, fontWeight: 800, color: "var(--ink)" }}>
             {mode === "create" ? "Create User" : "Edit User"}
           </h2>
           <p style={{ fontSize: 12, color: "var(--ink-40)", marginTop: 2 }}>
@@ -332,8 +332,9 @@ const UsersPage: React.FC = () => {
         role: form.role,
       };
       await userService.create(payload);
+      // Close modal first so the toast renders over the page, not the overlay
       setShowCreate(false);
-      showToast(`User "${form.username}" created successfully`, "success");
+      showToast(`User "${form.fullName.trim() || form.username.trim()}" created successfully`, "success");
       load();
     } catch (err) {
       setFormError(err instanceof Error ? err.message : "Failed to create user");
@@ -359,7 +360,7 @@ const UsersPage: React.FC = () => {
         password: form.password || undefined,
       });
       setEditUser(null);
-      showToast("User updated successfully", "success");
+      showToast(`User "${form.fullName.trim() || editUser.username}" updated successfully`, "success");
       load();
     } catch (err) {
       setFormError(err instanceof Error ? err.message : "Failed to update user");
