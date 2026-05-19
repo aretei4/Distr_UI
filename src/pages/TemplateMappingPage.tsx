@@ -18,7 +18,6 @@ const colLetter = (num: number) => {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const TEMPLATE_FIELDS: Record<string, string[]> = {
-  customer: ["Name", "Mobile", "address", "lat", "lon", "pin"],
   delivery: [
     "Name", "Mobile", "Alternative Mobile",
     "Address Line 1", "Address Line 2", "Address Line 3",
@@ -29,7 +28,6 @@ const TEMPLATE_FIELDS: Record<string, string[]> = {
 };
 
 const TYPE_LABELS: Record<string, string> = {
-  customer: "Customer",
   delivery: "Delivery Agent",
   sales:    "Invoice / Sales",
 };

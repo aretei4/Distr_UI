@@ -19,6 +19,7 @@ const DeliveryDetails = lazy(() => import("./pages/DeliveryDetails"));
 const CustomerList    = lazy(() => import("./pages/CustomerList"));
 const DayEnd          = lazy(() => import("./pages/DayEnd"));
 const UsersPage       = lazy(() => import("./pages/UsersPage"));
+const MapPage         = lazy(() => import("./pages/MapPage"));
 
 /**
  * ALL routes are always registered — no conditional route tree.
@@ -40,6 +41,7 @@ const App: React.FC = () => (
         <Route path="/agents/:agentId"   element={<DeliveryTable />} />
         <Route path="/customer"          element={<CustomerList />} />
         <Route path="/delivery"          element={<DeliveryList />} />
+        <Route path="/map"               element={<MapPage />} />
         <Route path="/details/:status"   element={<DeliveryDetails />} />
 
         {/* Role-restricted pages */}

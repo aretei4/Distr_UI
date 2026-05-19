@@ -11,7 +11,10 @@
       "WebSearch",
       "WebFetch(domain:ux.willistowerswatson.com)",
       "WebFetch(domain:rebrand.com)",
-      "Bash(powershell -Command \"\\(Get-Content 'D:\\\\project\\\\claude\\\\device4autism\\\\src\\\\pages\\\\LoginPage.tsx'\\) -replace \\\\\"'Syne', sans-serif\\\\\", \\\\\"'Inter', sans-serif\\\\\" | Set-Content 'D:\\\\project\\\\claude\\\\device4autism\\\\src\\\\pages\\\\LoginPage.tsx' -Encoding utf8\")"
+      "Bash(powershell -Command \"\\(Get-Content 'D:\\\\project\\\\claude\\\\device4autism\\\\src\\\\pages\\\\LoginPage.tsx'\\) -replace \\\\\"'Syne', sans-serif\\\\\", \\\\\"'Inter', sans-serif\\\\\" | Set-Content 'D:\\\\project\\\\claude\\\\device4autism\\\\src\\\\pages\\\\LoginPage.tsx' -Encoding utf8\")",
+      "Bash(Get-ChildItem -Path \"D:\\\\project\\\\distributor\\\\wsp\\\\Quick_Connect\" -Recurse -Include \"ApiService.kt\", \"ListFragment.kt\", \"ListViewModel.kt\", \"*DeliveryItem*\", \"*DeliveryListItem*\", \"*DeliveryResponse*\" -ErrorAction SilentlyContinue)",
+      "Bash(find \"D:\\\\project\\\\distributor\" -maxdepth 3 -type f -name \"*.sql\" 2>/dev/null | head -20)",
+      "Bash(npm install *)"
     ]
   }
 }

@@ -1,12 +1,25 @@
 import { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import type { DayEndRecord, ToastState } from "./types";
 import { fetchDayEndSummary, approveDayEnd, rejectDayEnd } from "../services/dayEndService";
+import { ApiEndpoints } from "../constants/config";
+import { authHeaders } from "../services/authService";
 import {
   PageHeader, Card, DataTable, TR, TD, StatusBadge,
   SearchInput, Select, Btn, Toast,
 } from "../components/ui";
 
-/* ── REJECT MODAL ─────────────────────────── */
+/* ── PICKLIST ROW TYPE ────────────────────────── */
+interface Picklist {
+  picklistNo:  string;
+  customerNo:  string;
+  custDesc:    string;
+  netValue:    string;
+  status?:     string;
+  paymentMode?: string;
+}
+
+/* ── REJECT MODAL (portal) ────────────────────── */
 function RejectModal({
   record, onClose, onConfirm,
 }: {
@@ -24,11 +37,11 @@ function RejectModal({
     setLoading(false);
   };
 
-  return (
+  return createPortal(
     <div
       onClick={onClose}
       style={{
-        position: "fixed", inset: 0, zIndex: 1000,
+        position: "fixed", inset: 0, zIndex: 9999,
         background: "rgba(11,18,21,0.5)",
         display: "flex", alignItems: "center", justifyContent: "center",
         animation: "fadeIn 0.2s ease",
@@ -46,13 +59,14 @@ function RejectModal({
           Reject Request
         </h2>
         <p style={{ fontSize: 13.5, color: "var(--ink-60)", marginBottom: 20 }}>
-          Provide a reason for rejecting <strong style={{ color: "var(--ink)" }}>{record.deliveryBoyName}</strong>'s day-end.
+          Provide a reason for rejecting{" "}
+          <strong style={{ color: "var(--ink)" }}>{record.deliveryBoyName}</strong>'s day-end.
         </p>
         <textarea
           value={reason}
           onChange={e => setReason(e.target.value)}
           rows={3}
-          placeholder="Enter rejection reason…"
+          placeholder="Enter rejection reason..."
           style={{
             width: "100%", padding: "12px 14px",
             border: "1.5px solid var(--ink-10)", borderRadius: "var(--radius-md)",
@@ -70,25 +84,129 @@ function RejectModal({
             onClick={confirm}
             disabled={!reason.trim() || loading}
           >
-            {loading ? "Rejecting…" : "Reject"}
+            {loading ? "Rejecting..." : "Reject"}
           </Btn>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
+  );
+}
+
+/* ── PICKLIST EXPANDED ROW ────────────────────── */
+function PicklistRow({ deliveryId, colSpan }: { deliveryId: number; colSpan: number }) {
+  const [items, setItems]     = useState<Picklist[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState("");
+
+  useEffect(() => {
+    setLoading(true);
+    setError("");
+    fetch(`${ApiEndpoints.DELIVERY_ASIGN_LIST}${deliveryId}`, { headers: authHeaders() })
+      .then(r => r.ok ? r.json() : Promise.reject("Failed to load"))
+      .then((data: Picklist[]) => { setItems(data); setLoading(false); })
+      .catch(() => { setError("Could not load picklists"); setLoading(false); });
+  }, [deliveryId]);
+
+  return (
+    <tr>
+      <td colSpan={colSpan} style={{ padding: 0 }}>
+        <div style={{
+          background: "var(--brand-xlight)",
+          borderBottom: "2px solid var(--brand-light)",
+          borderTop: "1px solid var(--brand-light)",
+          padding: "16px 24px",
+          animation: "fadeUp 0.2s ease",
+        }}>
+          <p style={{
+            fontSize: 11, fontWeight: 800, color: "var(--brand)",
+            textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12,
+          }}>
+            Picklists for this delivery
+          </p>
+
+          {loading ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--ink-40)", fontSize: 13 }}>
+              <div style={{ width: 14, height: 14, border: "2px solid var(--ink-20)", borderTopColor: "var(--brand)", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+              Loading picklists...
+            </div>
+          ) : error ? (
+            <p style={{ fontSize: 13, color: "var(--danger)" }}>{error}</p>
+          ) : items.length === 0 ? (
+            <p style={{ fontSize: 13, color: "var(--ink-40)" }}>No picklists found for this delivery.</p>
+          ) : (
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid var(--ink-10)" }}>
+                  {["Picklist No", "Customer No", "Customer Name", "Net Value", "Payment Mode", "Status"].map(h => (
+                    <th key={h} style={{
+                      padding: "6px 12px", textAlign: "left",
+                      fontSize: 10.5, fontWeight: 700,
+                      color: "var(--ink-60)", textTransform: "uppercase", letterSpacing: "0.06em",
+                    }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((p, i) => (
+                  <tr key={i} style={{ borderBottom: "1px solid var(--ink-10)" }}>
+                    <td style={{ padding: "8px 12px", fontWeight: 700, color: "var(--brand)", fontFamily: "monospace" }}>
+                      {p.picklistNo}
+                    </td>
+                    <td style={{ padding: "8px 12px", color: "var(--ink-60)" }}>{p.customerNo ?? "—"}</td>
+                    <td style={{ padding: "8px 12px", color: "var(--ink)" }}>{p.custDesc ?? "—"}</td>
+                    <td style={{ padding: "8px 12px", fontWeight: 600, color: "var(--ink)" }}>
+                      {p.netValue ? `Rs.${parseFloat(p.netValue).toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "—"}
+                    </td>
+                    <td style={{ padding: "8px 12px" }}>
+                      {p.paymentMode ? (
+                        <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                          {p.paymentMode.split(",").map(m => (
+                            <span key={m} style={{
+                              fontSize: 11, fontWeight: 700, padding: "2px 8px",
+                              borderRadius: 50,
+                              background: "var(--brand-light)", color: "var(--brand)",
+                            }}>{m.trim()}</span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span style={{ color: "var(--ink-40)" }}>—</span>
+                      )}
+                    </td>
+                    <td style={{ padding: "8px 12px" }}>
+                      {p.status ? (
+                        <span style={{
+                          fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 50,
+                          background: p.status === "2" ? "#d1fae5" : "#fef3c7",
+                          color: p.status === "2" ? "#065f46" : "#92400e",
+                        }}>
+                          {p.status === "2" ? "Delivered" : "Pending"}
+                        </span>
+                      ) : <span style={{ color: "var(--ink-40)" }}>—</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </td>
+    </tr>
   );
 }
 
 /* ── MAIN PAGE ───────────────────────────── */
 export default function DayEnd() {
-  const [data, setData]          = useState<DayEndRecord[]>([]);
-  const [loading, setLoading]    = useState(false);
-  const [search, setSearch]      = useState("");
-  const [status, setStatus]      = useState("ALL");
-  const [from, setFrom]          = useState("");
-  const [to, setTo]              = useState("");
-  const [actionLoading, setAL]   = useState<Record<string, boolean>>({});
-  const [toast, setToast]        = useState<ToastState | null>(null);
+  const [data, setData]           = useState<DayEndRecord[]>([]);
+  const [loading, setLoading]     = useState(false);
+  const [search, setSearch]       = useState("");
+  const [status, setStatus]       = useState("ALL");
+  const [from, setFrom]           = useState("");
+  const [to, setTo]               = useState("");
+  const [actionLoading, setAL]    = useState<Record<string, boolean>>({});
+  const [toast, setToast]         = useState<ToastState | null>(null);
   const [rejectRec, setRejectRec] = useState<DayEndRecord | null>(null);
+  const [expandedId, setExpanded] = useState<number | null>(null);
 
   const showToast = (message: string, type: ToastState["type"] = "success") => {
     setToast({ message, type });
@@ -135,9 +253,10 @@ export default function DayEnd() {
     return nameOk && statusOk && dateOk;
   });
 
-  // Summary counts
   const counts = { PENDING: 0, APPROVED: 0, REJECTED: 0 };
   data.forEach(r => { if (r.status in counts) counts[r.status]++; });
+
+  const COL_SPAN = 6;
 
   return (
     <div className="animate-fade-up">
@@ -185,7 +304,7 @@ export default function DayEnd() {
       {/* Filters */}
       <Card style={{ marginBottom: 16 }} padding="14px 18px">
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-          <SearchInput value={search} onChange={setSearch} placeholder="Search agent name…" />
+          <SearchInput value={search} onChange={setSearch} placeholder="Search agent name..." />
           <Select value={status} onChange={setStatus}>
             <option value="ALL">All statuses</option>
             <option value="PENDING">Pending</option>
@@ -216,7 +335,7 @@ export default function DayEnd() {
               }}
             />
             {(from || to) && (
-              <Btn size="sm" variant="ghost" onClick={() => { setFrom(""); setTo(""); }}>✕ Clear</Btn>
+              <Btn size="sm" variant="ghost" onClick={() => { setFrom(""); setTo(""); }}>X Clear</Btn>
             )}
           </div>
         </div>
@@ -224,50 +343,90 @@ export default function DayEnd() {
 
       {/* Table */}
       <DataTable
-        headers={["Agent", "Request Date", "Status", "Amount", "Reason", "Action"]}
+        headers={["Agent", "Date", "Status", "Amount", "Reason", "Action"]}
         loading={loading}
         empty={filtered.length === 0}
         emptyText="No day-end records match your filters"
       >
-        {filtered.map(row => (
-          <TR key={row.dayendId}>
-            <TD>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{
-                  width: 32, height: 32, borderRadius: "50%",
-                  background: "var(--brand-light)", color: "var(--brand)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 11, fontWeight: 700, flexShrink: 0,
-                }}>{row.deliveryBoyName?.slice(0, 2).toUpperCase()}</div>
-                <span style={{ fontWeight: 600, color: "var(--ink)" }}>{row.deliveryBoyName}</span>
-              </div>
-            </TD>
-            <TD style={{ color: "var(--ink-60)" }}>{row.requestDate?.split(" ")[0] ?? "—"}</TD>
-            <TD><StatusBadge status={row.status} /></TD>
-            <TD style={{ fontWeight: 700, color: "var(--ink)", fontFamily: "'Inter', sans-serif" }}>
-              ₹{row.totalAmount?.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-            </TD>
-            <TD style={{ color: "var(--ink-40)", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {row.rejectReason ?? "—"}
-            </TD>
-            <TD>
-              {row.status === "PENDING" ? (
-                <div style={{ display: "flex", gap: 6 }}>
-                  <Btn
-                    size="sm" variant="primary"
-                    onClick={() => handleApprove(row.dayendId)}
-                    disabled={actionLoading[`a_${row.dayendId}`]}
-                  >✓ Approve</Btn>
-                  <Btn size="sm" variant="danger" onClick={() => setRejectRec(row)}>✕ Reject</Btn>
-                </div>
-              ) : (
-                <span style={{ fontSize: 12, color: "var(--ink-40)", fontWeight: 500 }}>
-                  {row.status === "APPROVED" ? "✓ Approved" : "✕ Rejected"}
-                </span>
+        {filtered.map(row => {
+          const isOpen = expandedId === row.dayendId;
+          return (
+            <>
+              <TR
+                key={row.dayendId}
+                onClick={() => setExpanded(isOpen ? null : row.dayendId)}
+                style={{ cursor: "pointer", background: isOpen ? "var(--brand-xlight)" : undefined }}
+              >
+                {/* Agent */}
+                <TD>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: "50%",
+                      background: isOpen ? "var(--brand)" : "var(--brand-light)",
+                      color: isOpen ? "#fff" : "var(--brand)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 11, fontWeight: 700, flexShrink: 0,
+                      transition: "all 0.2s",
+                    }}>{row.deliveryBoyName?.slice(0, 2).toUpperCase()}</div>
+                    <div>
+                      <span style={{ fontWeight: 600, color: "var(--ink)" }}>{row.deliveryBoyName}</span>
+                      <div style={{ fontSize: 11, color: "var(--ink-40)", marginTop: 1 }}>
+                        ID #{row.deliveryId} &mdash; {isOpen ? "click to collapse" : "click to see picklists"}
+                      </div>
+                    </div>
+                  </div>
+                </TD>
+
+                {/* Date */}
+                <TD style={{ color: "var(--ink-60)" }}>{row.requestDate?.split(" ")[0] ?? "—"}</TD>
+
+                {/* Status */}
+                <TD><StatusBadge status={row.status} /></TD>
+
+                {/* Amount */}
+                <TD style={{ fontWeight: 700, color: "var(--ink)", fontFamily: "'Inter', sans-serif" }}>
+                  Rs.{row.totalAmount?.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                </TD>
+
+                {/* Reason */}
+                <TD style={{ color: "var(--ink-40)", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {row.rejectReason ?? "—"}
+                </TD>
+
+                {/* Action */}
+                <TD onClick={e => e.stopPropagation()}>
+                  {row.status === "PENDING" ? (
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <Btn
+                        size="sm" variant="primary"
+                        onClick={() => handleApprove(row.dayendId)}
+                        disabled={actionLoading[`a_${row.dayendId}`]}
+                      >
+                        Approve
+                      </Btn>
+                      <Btn size="sm" variant="danger" onClick={() => setRejectRec(row)}>
+                        Reject
+                      </Btn>
+                    </div>
+                  ) : (
+                    <span style={{ fontSize: 12, color: "var(--ink-40)", fontWeight: 500 }}>
+                      {row.status === "APPROVED" ? "Approved" : "Rejected"}
+                    </span>
+                  )}
+                </TD>
+              </TR>
+
+              {/* Expanded picklist sub-row */}
+              {isOpen && (
+                <PicklistRow
+                  key={`pl_${row.dayendId}`}
+                  deliveryId={row.deliveryId}
+                  colSpan={COL_SPAN}
+                />
               )}
-            </TD>
-          </TR>
-        ))}
+            </>
+          );
+        })}
       </DataTable>
     </div>
   );

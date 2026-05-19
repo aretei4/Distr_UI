@@ -64,6 +64,8 @@ const BADGE_MAP: Record<string, { color: string; bg: string; dot: string }> = {
   Cancelled: { color: "#991b1b", bg: "#fee2e2", dot: "#ef4444" },
   YES:       { color: "#065f46", bg: "#d1fae5", dot: "#10b981" },
   NO:        { color: "#991b1b", bg: "#fee2e2", dot: "#ef4444" },
+  DELIVERED: { color: "#065f46", bg: "#d1fae5", dot: "#10b981" },
+  FAILED:    { color: "#991b1b", bg: "#fee2e2", dot: "#ef4444" },
 };
 
 export const StatusBadge: React.FC<BadgeProps> = ({ status }) => {

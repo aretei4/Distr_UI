@@ -51,18 +51,20 @@ const Dashboard: React.FC = () => {
     totalDeliveries: 248, delivered: 198, pending: 42, cancelled: 8,
   };
 
+  const todayStr = new Date().toLocaleDateString("en-GB"); // dd/MM/yyyy
+
   const todayCards = [
-    { label: "Today Total", value: s.todayTotal, color: "var(--brand)", colorBg: "var(--brand-light)", icon: <BoxIcon /> },
-    { label: "Delivered", value: s.todayDelivered, color: "#0d7a4e", colorBg: "#d1fae5", icon: <CheckIcon /> },
-    { label: "Pending", value: s.todayPending, color: "#b45309", colorBg: "#fef3c7", icon: <ClockIcon /> },
-    { label: "Cancelled", value: s.todayCancelled, color: "#c0392b", colorBg: "#fde8e6", icon: <XIcon /> },
+    { label: "Today Total",   value: s.todayTotal,     color: "var(--brand)", colorBg: "var(--brand-light)", icon: <BoxIcon />,  filter: `ALL` },
+    { label: "Delivered",     value: s.todayDelivered, color: "#0d7a4e",      colorBg: "#d1fae5",            icon: <CheckIcon />, filter: `YES` },
+    { label: "Pending",       value: s.todayPending,   color: "#b45309",      colorBg: "#fef3c7",            icon: <ClockIcon />, filter: `NO`  },
+    { label: "Cancelled",     value: s.todayCancelled, color: "#c0392b",      colorBg: "#fde8e6",            icon: <XIcon />,     filter: `NO`  },
   ];
 
   const totalCards = [
-    { label: "Total Deliveries", value: s.totalDeliveries, color: "var(--brand)", colorBg: "var(--brand-light)", icon: <BoxIcon /> },
-    { label: "Delivered", value: s.delivered, color: "#0d7a4e", colorBg: "#d1fae5", icon: <CheckIcon /> },
-    { label: "Pending", value: s.pending, color: "#b45309", colorBg: "#fef3c7", icon: <ClockIcon /> },
-    { label: "Cancelled", value: s.cancelled, color: "#c0392b", colorBg: "#fde8e6", icon: <XIcon /> },
+    { label: "Total Deliveries", value: s.totalDeliveries, color: "var(--brand)", colorBg: "var(--brand-light)", icon: <BoxIcon />,  filter: `ALL` },
+    { label: "Delivered",        value: s.delivered,       color: "#0d7a4e",      colorBg: "#d1fae5",            icon: <CheckIcon />, filter: `YES` },
+    { label: "Pending",          value: s.pending,         color: "#b45309",      colorBg: "#fef3c7",            icon: <ClockIcon />, filter: `NO`  },
+    { label: "Cancelled",        value: s.cancelled,       color: "#c0392b",      colorBg: "#fde8e6",            icon: <XIcon />,     filter: `NO`  },
   ];
 
   return (
@@ -133,7 +135,9 @@ const Dashboard: React.FC = () => {
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14 }} className="stagger">
           {todayCards.map(c => (
-            <StatCard key={c.label} {...c} onClick={() => navigate("/delivery")} />
+            <StatCard key={c.label} {...c}
+              onClick={() => navigate(`/delivery?delivered=${c.filter}&from=${todayStr}&to=${todayStr}`)}
+            />
           ))}
         </div>
       </div>
@@ -147,7 +151,9 @@ const Dashboard: React.FC = () => {
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14 }} className="stagger">
           {totalCards.map(c => (
-            <StatCard key={c.label} {...c} onClick={() => navigate("/delivery")} />
+            <StatCard key={c.label} {...c}
+              onClick={() => navigate(`/delivery?delivered=${c.filter}`)}
+            />
           ))}
         </div>
       </div>

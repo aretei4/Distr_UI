@@ -1,75 +1,198 @@
 import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { fetchDeliveryData } from "../services/DeliveryService";
 import CalendarInput from "../components/CalendarInput";
 import { Delivery } from "../models/DeliveryModel";
 import { PageHeader, DataTable, TR, TD, Select, StatusBadge } from "../components/ui";
 
-const DeliveryPage: React.FC = () => {
-  const [deliveries, setDeliveries]       = useState<Delivery[]>([]);
-  const [filtered, setFiltered]           = useState<Delivery[]>([]);
-  const [fromDate, setFromDate]           = useState("");
-  const [toDate, setToDate]               = useState("");
-  const [deliveryIdFilter, setIdFilter]   = useState("");
-  const [deliveredFilter, setDelFilter]   = useState("ALL");
+// Returns today as dd/MM/yyyy
+const todayDMY = (): string => {
+  const d = new Date();
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  return `${dd}/${mm}/${d.getFullYear()}`;
+};
 
+// Payment mode pills
+const PaymentModes: React.FC<{ modes: Delivery["paymentModes"]; total: number }> = ({ modes, total }) => {
+  if (!modes || modes.length === 0) {
+    return <span style={{ color: "var(--ink-40)", fontSize: 12 }}>—</span>;
+  }
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+      {modes.map((m, i) => (
+        <span key={i} style={{
+          display: "inline-flex", alignItems: "center", gap: 3,
+          background: "var(--brand-light)", color: "var(--brand)",
+          borderRadius: 50, padding: "2px 8px", fontSize: 11.5, fontWeight: 600,
+          whiteSpace: "nowrap",
+        }}>
+          {m.mode}
+          <span style={{ color: "var(--ink-60)", fontWeight: 500 }}>
+            &nbsp;&#8377;{m.amount.toLocaleString("en-IN")}
+          </span>
+        </span>
+      ))}
+      {modes.length > 1 && (
+        <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--ink)", alignSelf: "center" }}>
+          = &#8377;{total.toLocaleString("en-IN")}
+        </span>
+      )}
+    </div>
+  );
+};
+
+const DeliveryPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
+
+  const today = todayDMY();
+
+  const [deliveries, setDeliveries]     = useState<Delivery[]>([]);
+  const [filtered, setFiltered]         = useState<Delivery[]>([]);
+  const [loading, setLoading]           = useState(false);
+  const [fromDate, setFromDate]         = useState(searchParams.get("from") ?? today);
+  const [toDate, setToDate]             = useState(searchParams.get("to")   ?? today);
+  const [agentSearch, setAgentSearch]   = useState("");
+  const [deliveredFilter, setDelFilter] = useState(searchParams.get("delivered") ?? "ALL");
+
+  // Load data whenever date range changes
   useEffect(() => {
-    if (fromDate && toDate) {
-      fetchDeliveryData(fromDate, toDate)
-        .then(data => { setDeliveries(data); setFiltered(data); })
-        .catch(console.error);
-    }
+    if (!fromDate || !toDate) return;
+    setLoading(true);
+    fetchDeliveryData(fromDate, toDate)
+      .then(data => { setDeliveries(data); })
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, [fromDate, toDate]);
 
+  // Apply filters
   useEffect(() => {
     let temp = [...deliveries];
-    if (deliveryIdFilter.trim()) temp = temp.filter(d => d.delivery_id.toString().includes(deliveryIdFilter));
-    if (deliveredFilter !== "ALL") temp = temp.filter(d => d.delivered === (deliveredFilter === "YES"));
+    if (agentSearch.trim()) {
+      const q = agentSearch.trim().toLowerCase();
+      temp = temp.filter(d =>
+        (d.deliveryBoyName ?? "").toLowerCase().includes(q)
+      );
+    }
+    if (deliveredFilter !== "ALL") {
+      if (deliveredFilter === "YES") temp = temp.filter(d => d.status === "DELIVERED");
+      else if (deliveredFilter === "NO") temp = temp.filter(d => d.status === "PENDING" || d.status === "FAILED");
+    }
     setFiltered(temp);
-  }, [deliveryIdFilter, deliveredFilter, deliveries]);
+  }, [agentSearch, deliveredFilter, deliveries]);
+
+  const fromDashboard = searchParams.get("delivered") !== null;
+
+  const totalAmount = filtered.reduce((a, d) => a + (d.payment_amount ?? 0), 0);
+  const deliveredCount = filtered.filter(d => d.status === "DELIVERED").length;
+  const pendingCount   = filtered.filter(d => d.status === "PENDING").length;
+  const failedCount    = filtered.filter(d => d.status === "FAILED").length;
 
   return (
     <div className="animate-fade-up">
-      <PageHeader title="Delivery Report" subtitle="Filter by date range to load records" />
+      <PageHeader
+        title="Delivery Report"
+        subtitle={fromDate && toDate ? `${fromDate}${fromDate !== toDate ? ` — ${toDate}` : ""}` : "Select a date range"}
+      />
 
-      <div style={{ display: "flex", gap: 20, marginBottom: 20, flexWrap: "wrap" }}>
+      {/* Dashboard filter chip */}
+      {fromDashboard && (
+        <div style={{
+          marginBottom: 16, padding: "10px 16px",
+          background: "var(--brand-light)", border: "1px solid var(--ink-10)",
+          borderRadius: "var(--radius-md)", display: "flex", alignItems: "center",
+          gap: 10, fontSize: 13, color: "var(--brand)",
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+          </svg>
+          <span>
+            Filtered from Dashboard —
+            <strong style={{ marginLeft: 4 }}>
+              {deliveredFilter === "YES" ? "Delivered" : deliveredFilter === "NO" ? "Pending / Not Delivered" : "All Deliveries"}
+            </strong>
+            {fromDate && (
+              <> &middot; <span style={{ color: "var(--ink-60)" }}>{fromDate}{toDate !== fromDate ? ` to ${toDate}` : ""}</span></>
+            )}
+          </span>
+          <button
+            onClick={() => { setDelFilter("ALL"); setFromDate(today); setToDate(today); }}
+            style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "var(--ink-40)", fontSize: 13 }}
+          >
+            &#x2715; Clear
+          </button>
+        </div>
+      )}
+
+      {/* Filters row */}
+      <div style={{ display: "flex", gap: 16, marginBottom: 20, flexWrap: "wrap", alignItems: "flex-end" }}>
         <CalendarInput label="From Date" value={fromDate} onChange={setFromDate} />
         <CalendarInput label="To Date"   value={toDate}   onChange={setToDate} />
+
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <label style={{ fontSize: 11.5, fontWeight: 700, color: "var(--ink-60)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-            Delivery ID
+            Agent Name
           </label>
           <input
-            value={deliveryIdFilter} onChange={e => setIdFilter(e.target.value)}
-            placeholder="Filter by ID"
-            style={{ padding: "9px 12px", border: "1.5px solid var(--ink-10)", borderRadius: "var(--radius-md)", fontSize: 13, fontFamily: "'Inter', sans-serif", outline: "none" }}
+            value={agentSearch}
+            onChange={e => setAgentSearch(e.target.value)}
+            placeholder="Search delivery boy..."
+            style={{ padding: "9px 12px", border: "1.5px solid var(--ink-10)", borderRadius: "var(--radius-md)", fontSize: 13, fontFamily: "'Inter', sans-serif", outline: "none", minWidth: 180 }}
           />
         </div>
+
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <label style={{ fontSize: 11.5, fontWeight: 700, color: "var(--ink-60)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-            Delivered
+            Status
           </label>
           <Select value={deliveredFilter} onChange={setDelFilter}>
             <option value="ALL">All</option>
-            <option value="YES">Yes</option>
-            <option value="NO">No</option>
+            <option value="YES">Delivered</option>
+            <option value="NO">Pending</option>
           </Select>
         </div>
+
+        {/* Summary chips */}
+        {deliveries.length > 0 && (
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginLeft: "auto" }}>
+            <span style={{ fontSize: 12, padding: "5px 12px", borderRadius: 50, background: "#d1fae5", color: "#065f46", fontWeight: 600 }}>
+              {deliveredCount} Delivered
+            </span>
+            <span style={{ fontSize: 12, padding: "5px 12px", borderRadius: 50, background: "#fef3c7", color: "#92400e", fontWeight: 600 }}>
+              {pendingCount} Pending
+            </span>
+            <span style={{ fontSize: 12, padding: "5px 12px", borderRadius: 50, background: "#fee2e2", color: "#991b1b", fontWeight: 600 }}>
+              {failedCount} Failed
+            </span>
+            <span style={{ fontSize: 12, padding: "5px 12px", borderRadius: 50, background: "var(--brand-light)", color: "var(--brand)", fontWeight: 600 }}>
+              &#8377;{totalAmount.toLocaleString("en-IN")} collected
+            </span>
+          </div>
+        )}
       </div>
 
       <DataTable
-        headers={["Delivery ID", "Picklist No", "Delivered", "OTP", "Payment", "Reason", "Date"]}
-        empty={filtered.length === 0}
-        emptyText={fromDate && toDate ? "No records found" : "Select a date range to load data"}
+        headers={["ID", "Agent", "Picklist No", "Status", "OTP", "Payment Modes", "Reason", "Date"]}
+        loading={loading}
+        empty={!loading && filtered.length === 0}
+        emptyText={fromDate && toDate ? "No records found for this range" : "Select a date range to load data"}
       >
         {filtered.map((d, i) => (
           <TR key={i}>
-            <TD style={{ fontWeight: 700 }}>{d.delivery_id}</TD>
-            <TD>{d.picklist_no}</TD>
-            <TD><StatusBadge status={d.delivered ? "YES" : "NO"} /></TD>
-            <TD><StatusBadge status={d.otp ? "YES" : "NO"} /></TD>
-            <TD style={{ fontWeight: 600 }}>₹{d.payment_amount}</TD>
-            <TD style={{ color: "var(--ink-60)" }}>{d.reason || "—"}</TD>
-            <TD style={{ color: "var(--ink-60)" }}>{d.delivery_date}</TD>
+            <TD style={{ fontWeight: 700, color: "var(--ink-60)", fontSize: 12 }}>#{d.delivery_id}</TD>
+            <TD>
+              <div style={{ fontWeight: 600, color: "var(--ink)", fontSize: 13 }}>
+                {d.deliveryBoyName || "—"}
+              </div>
+            </TD>
+            <TD style={{ fontFamily: "monospace", fontSize: 12.5 }}>{d.picklist_no}</TD>
+            <TD><StatusBadge status={d.status} /></TD>
+            <TD><StatusBadge status={Boolean(d.otp) ? "YES" : "NO"} /></TD>
+            <TD>
+              <PaymentModes modes={d.paymentModes} total={d.payment_amount} />
+            </TD>
+            <TD style={{ color: "var(--ink-60)", fontSize: 12.5 }}>{d.reason || "—"}</TD>
+            <TD style={{ color: "var(--ink-60)", fontSize: 12.5, whiteSpace: "nowrap" }}>{d.delivery_date}</TD>
           </TR>
         ))}
       </DataTable>

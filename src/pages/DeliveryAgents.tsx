@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { fetchDeliveryAgents } from "../services/DeliveryService";
 import { AppConfig } from "../constants/config";
@@ -53,30 +54,32 @@ const EMPTY_FORM: AgentForm = {
 
 // ── Overlay ───────────────────────────────────────────────────────────────────
 
-const Overlay: React.FC<{ children: React.ReactNode; onClose: () => void }> = ({ children, onClose }) => (
-  <div
-    onClick={onClose}
-    style={{
-      position: "fixed", inset: 0, zIndex: 1000,
-      background: "rgba(0,0,0,0.45)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      padding: 24,
-    }}
-  >
+const Overlay: React.FC<{ children: React.ReactNode; onClose: () => void }> = ({ children, onClose }) =>
+  createPortal(
     <div
-      onClick={e => e.stopPropagation()}
+      onClick={onClose}
       style={{
-        background: "var(--white)", borderRadius: "var(--radius-xl)",
-        width: "100%", maxWidth: 640,
-        maxHeight: "90vh", overflowY: "auto",
-        boxShadow: "var(--shadow-lg)",
-        animation: "fadeUp 0.2s ease",
+        position: "fixed", inset: 0, zIndex: 9999,
+        background: "rgba(0,0,0,0.45)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 24,
       }}
     >
-      {children}
-    </div>
-  </div>
-);
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: "var(--white)", borderRadius: "var(--radius-xl)",
+          width: "100%", maxWidth: 640,
+          maxHeight: "90vh", overflowY: "auto",
+          boxShadow: "var(--shadow-lg)",
+          animation: "fadeUp 0.2s ease",
+        }}
+      >
+        {children}
+      </div>
+    </div>,
+    document.body
+  );
 
 // ── Section divider inside form ───────────────────────────────────────────────
 

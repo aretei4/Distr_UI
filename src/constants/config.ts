@@ -40,4 +40,6 @@ export const ApiEndpoints = {
   DAY_END_SUMMARY:      `${API_BASE_URL}/dayend/dayEndSummery`,
   DAY_END_APPROVE:      `${API_BASE_URL}/dayend/approve`,
   DAY_END_REJECT:       `${API_BASE_URL}/dayend/reject`,
+  DELIVERY_MAP:         `${API_BASE_URL}/delivery/map`,
+  WAREHOUSES:           `${API_BASE_URL}/warehouse`,
 };
