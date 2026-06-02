@@ -1,6 +1,9 @@
 export interface PaymentMode {
-  mode:   string;
-  amount: number;
+  mode:         string;
+  amount:       number;
+  chequeNo?:    string;
+  bankName?:    string;
+  referenceNo?: string;
 }
 
 export interface Delivery {

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { authService } from "../services/authService";
+import { getCompanyInfo } from "../constants/config";
 
 interface NavItem {
   path: string;
@@ -70,6 +71,15 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
+    path: "/smart-route",
+    label: "Smart Route",
+    icon: (
+      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+        <path d="M3 12h4l3-9 4 18 3-9h4"/>
+      </svg>
+    ),
+  },
+  {
     path: "/agents",
     label: "Agents",
     icon: (
@@ -111,6 +121,17 @@ const NAV_ITEMS: NavItem[] = [
       </svg>
     ),
   },
+  {
+    path: "/config",
+    label: "Config",
+    icon: (
+      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+      </svg>
+    ),
+  },
 ];
 
 const MainLayout: React.FC = () => {
@@ -124,9 +145,10 @@ const MainLayout: React.FC = () => {
   };
 
   const authUser = authService.getUser();
-  const user = authUser?.fullName || authUser?.username || "Admin";
-  const role = authUser?.role ?? "STAFF";
+  const user     = authUser?.fullName || authUser?.username || "Admin";
+  const role     = authUser?.role ?? "STAFF";
   const initials = user.slice(0, 2).toUpperCase();
+  const company  = getCompanyInfo();
 
   return (
     <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "var(--ink-5)" }}>
@@ -316,7 +338,32 @@ const MainLayout: React.FC = () => {
               {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
             </p>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+
+            {/* Company chip */}
+            {company && (
+              <div style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "6px 14px 6px 10px",
+                border: "1px solid var(--brand)",
+                borderRadius: 50, background: "var(--brand-xlight)",
+              }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                <div>
+                  <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--brand)", whiteSpace: "nowrap", lineHeight: 1.2 }}>
+                    {company.name}
+                  </div>
+                  <div style={{ fontSize: 10.5, color: "var(--brand)", opacity: 0.65, lineHeight: 1.2 }}>
+                    {company.code}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* User pill */}
             <div style={{
               display: "flex", alignItems: "center", gap: 8,
               padding: "6px 14px 6px 6px",

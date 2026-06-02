@@ -10,6 +10,7 @@ export interface MapPoint {
   delivery_date:   string;
   address:         string;
   sequence:        number;
+  net_value:       number;   // invoice net value from stage_sales_entery (0 if not found)
 }
 
 export const fetchMapPoints = async (fromDate: string, toDate: string): Promise<MapPoint[]> => {

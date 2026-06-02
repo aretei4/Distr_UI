@@ -95,15 +95,35 @@ const FormSection: React.FC<{ title: string }> = ({ title }) => (
   </div>
 );
 
-// ── Add Agent form modal ──────────────────────────────────────────────────────
+// ── Add / Edit Agent form modal ───────────────────────────────────────────────
 
 const AgentFormModal: React.FC<{
-  onClose:  () => void;
-  onSaved:  (agent: DeliveryAgent) => void;
-}> = ({ onClose, onSaved }) => {
-  const [form, setForm]     = useState<AgentForm>(EMPTY_FORM);
+  onClose:       () => void;
+  onSaved:       (agent: DeliveryAgent) => void;
+  mode?:         "add" | "edit";
+  initialAgent?: DeliveryAgent;
+}> = ({ onClose, onSaved, mode = "add", initialAgent }) => {
+  const isEdit = mode === "edit";
+
+  const toForm = (a?: DeliveryAgent): AgentForm => a ? {
+    name:          a.name          ?? "",
+    contact:       a.contact       ?? "",
+    altContact:    a.altContact    ?? "",
+    address1:      a.address1      ?? "",
+    address2:      a.address2      ?? "",
+    address3:      a.address3      ?? "",
+    city:          a.city          ?? "",
+    pinCode:       a.pinCode       ?? "",
+    fatherName:    a.fatherName    ?? "",
+    aadharNo:      a.aadharNo      ?? "",
+    panCard:       a.panCard       ?? "",
+    bankAccount:   a.bankAccount   ?? "",
+    dateOfJoining: a.dateOfJoining ?? "",
+  } : EMPTY_FORM;
+
+  const [form, setForm]       = useState<AgentForm>(() => toForm(initialAgent));
   const [loading, setLoading] = useState(false);
-  const [error, setError]   = useState("");
+  const [error, setError]     = useState("");
 
   const set = (k: keyof AgentForm) => (v: string) =>
     setForm(prev => ({ ...prev, [k]: v }));
@@ -113,19 +133,24 @@ const AgentFormModal: React.FC<{
     if (!form.contact.trim()) { setError("Mobile number is required"); return; }
     if (!/^\d{10}$/.test(form.contact)) { setError("Mobile must be 10 digits"); return; }
     if (form.aadharNo && !/^\d{12}$/.test(form.aadharNo)) { setError("Aadhar must be 12 digits"); return; }
-    if (!form.address1.trim()) { setError("Address Line 1 is required"); return; }
+    if (!isEdit && !form.address1.trim()) { setError("Address Line 1 is required"); return; }
 
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`${AppConfig.API_BASE_URL}/delivery/agent`, {
-        method: "POST",
+      const url = isEdit
+        ? `${AppConfig.API_BASE_URL}/delivery/agent/${initialAgent!.id}`
+        : `${AppConfig.API_BASE_URL}/delivery/agent`;
+      const method = isEdit ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({
           name:          form.name.trim(),
           contact:       form.contact.trim(),
           altContact:    form.altContact.trim() || null,
-          address1:      form.address1.trim(),
+          address1:      form.address1.trim() || null,
           address2:      form.address2.trim() || null,
           address3:      form.address3.trim() || null,
           city:          form.city.trim() || null,
@@ -140,14 +165,14 @@ const AgentFormModal: React.FC<{
 
       if (!res.ok) {
         const err = await res.json().catch(() => null);
-        throw new Error(err?.error ?? err?.message ?? "Failed to create agent");
+        throw new Error(err?.error ?? err?.message ?? (isEdit ? "Failed to update agent" : "Failed to create agent"));
       }
-      const created: DeliveryAgent = await res.json().catch(() => ({
-        id: Date.now(), ...form,
+      const saved: DeliveryAgent = await res.json().catch(() => ({
+        ...(initialAgent ?? {}), id: initialAgent?.id ?? Date.now(), ...form,
       }));
-      onSaved(created);
+      onSaved(saved);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create agent");
+      setError(err instanceof Error ? err.message : (isEdit ? "Failed to update agent" : "Failed to create agent"));
     } finally {
       setLoading(false);
     }
@@ -163,10 +188,10 @@ const AgentFormModal: React.FC<{
       }}>
         <div>
           <h2 style={{ fontFamily: "'Inter', sans-serif", fontSize: 17, fontWeight: 800, color: "var(--ink)" }}>
-            Add Delivery Agent
+            {isEdit ? "Edit Delivery Agent" : "Add Delivery Agent"}
           </h2>
           <p style={{ fontSize: 12, color: "var(--ink-40)", marginTop: 2 }}>
-            Fill in the agent's details below
+            {isEdit ? `Editing details for ${initialAgent?.name}` : "Fill in the agent's details below"}
           </p>
         </div>
         <button
@@ -278,7 +303,7 @@ const AgentFormModal: React.FC<{
       }}>
         <Btn variant="secondary" onClick={onClose} disabled={loading}>Cancel</Btn>
         <Btn variant="primary" onClick={handleSubmit} disabled={loading}>
-          {loading ? "Saving…" : "Add Agent"}
+          {loading ? "Saving…" : isEdit ? "Save Changes" : "Add Agent"}
         </Btn>
       </div>
     </Overlay>
@@ -377,9 +402,10 @@ const DeliveryAgents: React.FC = () => {
   const [selected, setSelected]   = useState<number[]>([]);
   const [search, setSearch]       = useState("");
   const [loading, setLoading]     = useState(true);
-  const [showAdd, setShowAdd]     = useState(false);
-  const [expandedId, setExpanded] = useState<number | null>(null);
-  const [toast, setToast]         = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [showAdd, setShowAdd]         = useState(false);
+  const [editingAgent, setEditingAgent] = useState<DeliveryAgent | null>(null);
+  const [expandedId, setExpanded]     = useState<number | null>(null);
+  const [toast, setToast]             = useState<{ message: string; type: "success" | "error" } | null>(null);
   const navigate = useNavigate();
 
   const showToast = (message: string, type: "success" | "error") => {
@@ -423,6 +449,12 @@ const DeliveryAgents: React.FC = () => {
   const handleAgentSaved = (agent: DeliveryAgent) => {
     setShowAdd(false);
     showToast(`Agent "${agent.name}" added successfully`, "success");
+    load();
+  };
+
+  const handleAgentUpdated = (agent: DeliveryAgent) => {
+    setEditingAgent(null);
+    showToast(`Agent "${agent.name}" updated successfully`, "success");
     load();
   };
 
@@ -541,6 +573,12 @@ const DeliveryAgents: React.FC = () => {
                       {isOpen ? "▲ Hide" : "▼ Details"}
                     </Btn>
                     <Btn size="sm" variant="ghost"
+                      onClick={e => { (e as React.MouseEvent).stopPropagation(); setEditingAgent(agent); }}
+                      style={{ color: "var(--brand)" }}
+                    >
+                      ✏ Edit
+                    </Btn>
+                    <Btn size="sm" variant="ghost"
                       onClick={e => { (e as React.MouseEvent).stopPropagation(); navigate(`/agents/${agent.id}`); }}
                     >
                       →
@@ -561,6 +599,17 @@ const DeliveryAgents: React.FC = () => {
         <AgentFormModal
           onClose={() => setShowAdd(false)}
           onSaved={handleAgentSaved}
+          mode="add"
+        />
+      )}
+
+      {/* Edit Agent modal */}
+      {editingAgent && (
+        <AgentFormModal
+          onClose={() => setEditingAgent(null)}
+          onSaved={handleAgentUpdated}
+          mode="edit"
+          initialAgent={editingAgent}
         />
       )}
     </div>

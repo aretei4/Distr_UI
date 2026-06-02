@@ -20,6 +20,8 @@ const CustomerList    = lazy(() => import("./pages/CustomerList"));
 const DayEnd          = lazy(() => import("./pages/DayEnd"));
 const UsersPage       = lazy(() => import("./pages/UsersPage"));
 const MapPage         = lazy(() => import("./pages/MapPage"));
+const SmartRoute      = lazy(() => import("./pages/SmartRoute"));
+const ConfigPage      = lazy(() => import("./pages/ConfigPage"));
 
 /**
  * ALL routes are always registered — no conditional route tree.
@@ -42,6 +44,7 @@ const App: React.FC = () => (
         <Route path="/customer"          element={<CustomerList />} />
         <Route path="/delivery"          element={<DeliveryList />} />
         <Route path="/map"               element={<MapPage />} />
+        <Route path="/smart-route"       element={<SmartRoute />} />
         <Route path="/details/:status"   element={<DeliveryDetails />} />
 
         {/* Role-restricted pages */}
@@ -49,6 +52,7 @@ const App: React.FC = () => (
         <Route path="/dayEnd"   element={<PrivateRoute roles={["ADMIN","MANAGER"]}><DayEnd /></PrivateRoute>} />
         <Route path="/template" element={<PrivateRoute roles={["ADMIN"]}><Template /></PrivateRoute>} />
         <Route path="/users"    element={<PrivateRoute roles={["ADMIN","MANAGER"]}><UsersPage /></PrivateRoute>} />
+        <Route path="/config"   element={<PrivateRoute roles={["ADMIN"]}><ConfigPage /></PrivateRoute>} />
 
         <Route path="*" element={<NotFound />} />
       </Route>

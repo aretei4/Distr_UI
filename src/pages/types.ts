@@ -1,5 +1,6 @@
 export interface DayEndRecord {
   dayendId: number;
+  dayEndCode: string | null;   // e.g. "DE-2026-0523-023" — computed by backend
   deliveryId: number;
   deliveryBoyName: string;
   deliveryDate: string;

@@ -1,4 +1,4 @@
-import { AppConfig } from "../constants/config";
+import { getApiBaseUrl, setCompanyBaseUrl, setCompanyInfo } from "../constants/config";
 
 const AUTH_KEY = "d4a_auth";
 
@@ -11,11 +11,11 @@ export interface AuthUser {
 }
 
 export const authService = {
-  async login(username: string, password: string): Promise<AuthUser> {
-    const res = await fetch(`${AppConfig.API_BASE_URL}/auth/login`, {
+  async login(username: string, password: string, companyCode?: string): Promise<AuthUser> {
+    const res = await fetch(`${getApiBaseUrl()}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ username, password, ...(companyCode ? { companyCode } : {}) }),
     });
 
     if (!res.ok) {
@@ -37,6 +37,8 @@ export const authService = {
 
   logout() {
     localStorage.removeItem(AUTH_KEY);
+    setCompanyBaseUrl(null);
+    setCompanyInfo(null);
   },
 
   getUser(): AuthUser | null {
