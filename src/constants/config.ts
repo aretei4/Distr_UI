@@ -81,6 +81,7 @@ export const ApiEndpoints = {
   PICKLISTS_BY_AGENT:  (id: string | number) => `${getApiBaseUrl()}/dayend/picklists/${id}`,
   UPDATE_PICKLIST:     (picklistNo: string)   => `${getApiBaseUrl()}/dayend/picklist/${encodeURIComponent(picklistNo)}`,
   DELETE_PICKLIST:     (picklistNo: string)   => `${getApiBaseUrl()}/dayend/picklist/${encodeURIComponent(picklistNo)}`,
+  get ONLINE_AGENTS()        { return `${getApiBaseUrl()}/dayend/online-agents`; },
   get FEATURE_FLAGS()        { return `${getApiBaseUrl()}/config/features`; },
   FEATURE_TOGGLE:      (key: string) => `${getApiBaseUrl()}/config/features/${encodeURIComponent(key)}/toggle`,
   get FEATURE_SAVE_ALL()     { return `${getApiBaseUrl()}/config/features/save-all`; },

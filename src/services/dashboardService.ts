@@ -1,14 +1,20 @@
 import { ApiEndpoints } from "../constants/config";
+import { authHeaders } from "./authService";
 
 export interface DeliverySummary {
-  totalDeliveries: number;
-  delivered: number;
-  pending: number;
-  cancelled: number;
-  todayTotal: number;
-  todayDelivered: number;
-  todayPending: number;
-  todayCancelled: number;
+  totalDeliveries:  number;
+  delivered:        number;
+  pending:          number;
+  cancelled:        number;
+  todayTotal:       number;
+  todayDelivered:   number;
+  todayPending:     number;
+  todayCancelled:   number;
+  // amounts
+  todayNetValue:    number;
+  totalNetValue:    number;
+  todayCollected:   number;
+  totalCollected:   number;
 }
 
 export interface DeliveryDetails {
@@ -27,19 +33,19 @@ export interface DeliveryBoy {
 export async function getDeliverySummary(boyId: number | null): Promise<DeliverySummary> {
   let url = ApiEndpoints.DELIVERY_DASHBOARD;
   if (boyId !== null) url += `?boyId=${boyId}`;
-  const res = await fetch(url);
+  const res = await fetch(url, { headers: authHeaders() });
   if (!res.ok) throw new Error("Failed to fetch delivery summary");
   return res.json();
 }
 
 export const fetchDeliveryAgents = async (): Promise<DeliveryBoy[]> => {
-  const res = await fetch(ApiEndpoints.DELIVERY_AGENTS);
+  const res = await fetch(ApiEndpoints.DELIVERY_AGENTS, { headers: authHeaders() });
   if (!res.ok) throw new Error("Failed to fetch delivery boys");
   return res.json();
 };
 
 export async function getDeliveryDetails(status: string): Promise<DeliveryDetails[]> {
-  const res = await fetch(ApiEndpoints.DELIVERY_STATUS);
+  const res = await fetch(ApiEndpoints.DELIVERY_STATUS, { headers: authHeaders() });
   if (!res.ok) throw new Error("Failed to fetch delivery details");
   return res.json();
 }

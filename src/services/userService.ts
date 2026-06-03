@@ -1,4 +1,4 @@
-import { AppConfig } from "../constants/config";
+import { getApiBaseUrl } from "../constants/config";
 import { authHeaders } from "./authService";
 
 export type UserRole = "ADMIN" | "MANAGER" | "STAFF";
@@ -30,11 +30,11 @@ export interface UpdateUserPayload {
   password?: string;
 }
 
-const BASE = `${AppConfig.API_BASE_URL}/users`;
+const BASE = () => `${getApiBaseUrl()}/users`;
 
 export const userService = {
   async getAll(): Promise<UserRecord[]> {
-    const res = await fetch(BASE, {
+    const res = await fetch(BASE(), {
       headers: { "Content-Type": "application/json", ...authHeaders() },
     });
     if (!res.ok) throw new Error("Failed to load users");
@@ -42,7 +42,7 @@ export const userService = {
   },
 
   async create(payload: CreateUserPayload): Promise<UserRecord> {
-    const res = await fetch(BASE, {
+    const res = await fetch(BASE(), {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify(payload),
@@ -56,7 +56,7 @@ export const userService = {
   },
 
   async update(id: number, payload: UpdateUserPayload): Promise<UserRecord> {
-    const res = await fetch(`${BASE}/${id}`, {
+    const res = await fetch(`${BASE()}/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify(payload),
@@ -69,7 +69,7 @@ export const userService = {
   },
 
   async remove(id: number): Promise<void> {
-    const res = await fetch(`${BASE}/${id}`, {
+    const res = await fetch(`${BASE()}/${id}`, {
       method: "DELETE",
       headers: { ...authHeaders() },
     });

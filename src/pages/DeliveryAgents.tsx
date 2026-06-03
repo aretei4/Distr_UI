@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { fetchDeliveryAgents } from "../services/DeliveryService";
-import { AppConfig } from "../constants/config";
+import { getApiBaseUrl } from "../constants/config";
 import { authHeaders } from "../services/authService";
 import {
   PageHeader, DataTable, TR, TD, SearchInput,
@@ -139,8 +139,8 @@ const AgentFormModal: React.FC<{
     setError("");
     try {
       const url = isEdit
-        ? `${AppConfig.API_BASE_URL}/delivery/agent/${initialAgent!.id}`
-        : `${AppConfig.API_BASE_URL}/delivery/agent`;
+        ? `${getApiBaseUrl()}/delivery/agent/${initialAgent!.id}`
+        : `${getApiBaseUrl()}/delivery/agent`;
       const method = isEdit ? "PUT" : "POST";
 
       const res = await fetch(url, {

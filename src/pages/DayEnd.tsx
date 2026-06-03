@@ -48,7 +48,7 @@ function validatePicklist(p: Picklist): string | null {
   return null;
 }
 
-const PAYMENT_MODES = ["CASH", "UPI", "CHEQUE", "NEFT", "CARD"];
+const PAYMENT_MODES = ["CASH", "UPI", "CHEQUE", "NEFT", "CARD", "CREDIT"];
 
 /* ── Payment mode entry (JSON format from mobile app) ─────────────────────── */
 interface PaymentEntry {
@@ -86,6 +86,7 @@ const MODE_STYLE: Record<string, { bg: string; color: string; border: string }> 
   CHEQUE: { bg: "#fef3c7", color: "#92400e", border: "#fcd34d" },
   NEFT:   { bg: "#dbeafe", color: "#1e40af", border: "#93c5fd" },
   CARD:   { bg: "#fce7f3", color: "#9d174d", border: "#f9a8d4" },
+  CREDIT: { bg: "#fce7f3", color: "#9d174d", border: "#f9a8d4" },
 };
 const DEFAULT_MODE_STYLE = { bg: "#f1f5f9", color: "#475569", border: "#cbd5e1" };
 
@@ -304,7 +305,7 @@ function EditPicklistModal({
       if (m === "CHEQUE") {
         if (d.chequeNo.trim())  obj.chequeNo  = d.chequeNo.trim();
         if (d.bankName.trim())  obj.bankName  = d.bankName.trim();
-      } else if (m === "UPI" || m === "NEFT") {
+      } else if (m === "UPI" || m === "NEFT" || m === "CREDIT") {
         if (d.referenceNo.trim()) obj.referenceNo = d.referenceNo.trim();
       }
       return obj;
@@ -312,13 +313,17 @@ function EditPicklistModal({
     return JSON.stringify(entries);
   };
 
+  const diff       = totalPayment - net;            // positive = overpaid, negative = underpaid
+  const isOverPaid  = diff > net * 0.05;             // > 5% over invoice
+  const isUnderPaid = delivered && totalPayment > 0 && diff < -(net * 0.01); // > 1% under
+
   const validate = () => {
     if (delivered && selectedModes.length === 0)
       return "Select at least one payment mode for a delivered item";
     if (delivered && totalPayment <= 0)
       return "Payment amount must be greater than zero for delivered items";
-    if (delivered && totalPayment > net * 1.1)
-      return `Payment ₹${totalPayment.toLocaleString("en-IN")} exceeds invoice ₹${net.toLocaleString("en-IN")} by more than 10%`;
+    if (delivered && isOverPaid)
+      return `Payment ₹${totalPayment.toLocaleString("en-IN")} exceeds invoice ₹${net.toLocaleString("en-IN")} by more than 5% — please verify`;
     if (!delivered && !reason.trim())
       return "Please provide a reason for non-delivery";
     return null;
@@ -503,8 +508,8 @@ function EditPicklistModal({
                             </>
                           )}
 
-                          {/* UPI / NEFT extras */}
-                          {(mode === "UPI" || mode === "NEFT") && (
+                          {/* UPI / NEFT / CREDIT extras */}
+                          {(mode === "UPI" || mode === "NEFT" || mode === "CREDIT") && (
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                               <span style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-60)", minWidth: 90 }}>Reference No</span>
                               <input
@@ -523,26 +528,62 @@ function EditPicklistModal({
                 })}
               </div>
 
-              {/* Running total */}
-              {selectedModes.length > 0 && (
+              {/* Invoice vs Collected summary */}
+              <div style={{
+                marginTop: 12, borderRadius: "var(--radius-md)",
+                border: `1.5px solid ${isOverPaid ? "#fca5a5" : isUnderPaid ? "#fcd34d" : "#6ee7b7"}`,
+                overflow: "hidden",
+              }}>
+                {/* Header bar */}
                 <div style={{
-                  marginTop: 10, padding: "10px 14px", borderRadius: "var(--radius-md)",
-                  background: totalPayment > net * 1.05 ? "#fee2e2" : "var(--brand-xlight)",
-                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  background: isOverPaid ? "#fee2e2" : isUnderPaid ? "#fef3c7" : "#d1fae5",
+                  padding: "8px 14px",
+                  display: "flex", alignItems: "center", gap: 6,
+                  fontSize: 11.5, fontWeight: 700,
+                  color: isOverPaid ? "#991b1b" : isUnderPaid ? "#92400e" : "#065f46",
                 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-60)" }}>Total Payment</span>
-                  <div style={{ textAlign: "right" }}>
-                    <span style={{ fontSize: 15, fontWeight: 800, color: totalPayment > net * 1.05 ? "#991b1b" : "var(--brand)" }}>
+                  <span>{isOverPaid ? "⚠ Overpaid" : isUnderPaid ? "⚠ Underpaid" : "✓ Amount looks good"}</span>
+                </div>
+
+                {/* Three columns: Invoice | Collected | Difference */}
+                <div style={{
+                  display: "grid", gridTemplateColumns: "1fr 1fr 1fr",
+                  background: "#fafafa",
+                }}>
+                  {/* Invoice */}
+                  <div style={{ padding: "12px 14px", borderRight: "1px solid #e2e8f0" }}>
+                    <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--ink-60)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+                      Invoice
+                    </div>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: "var(--ink)" }}>
+                      ₹{net.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                    </div>
+                  </div>
+
+                  {/* Collected */}
+                  <div style={{ padding: "12px 14px", borderRight: "1px solid #e2e8f0" }}>
+                    <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--ink-60)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+                      Collected
+                    </div>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: isOverPaid ? "#991b1b" : "var(--brand)" }}>
                       ₹{totalPayment.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                    </span>
-                    {totalPayment > net * 1.05 && (
-                      <div style={{ fontSize: 11, color: "#991b1b", marginTop: 2 }}>
-                        ⚠ Exceeds invoice by ₹{(totalPayment - net).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                      </div>
-                    )}
+                    </div>
+                  </div>
+
+                  {/* Difference */}
+                  <div style={{ padding: "12px 14px" }}>
+                    <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--ink-60)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+                      Difference
+                    </div>
+                    <div style={{
+                      fontSize: 15, fontWeight: 800,
+                      color: diff === 0 ? "#065f46" : isOverPaid ? "#991b1b" : "#92400e",
+                    }}>
+                      {diff === 0 ? "—" : (diff > 0 ? "+" : "−") + " ₹" + Math.abs(diff).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                    </div>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           )}
 
@@ -675,7 +716,9 @@ function PicklistRow({
     items.forEach(p => parsePaymentMode(p.paymentMode).forEach(e => {
       totals[e.mode] = (totals[e.mode] ?? 0) + e.amount;
     }));
-    const grandTotal = Object.values(totals).reduce((s, v) => s + v, 0);
+    const grandTotal = Object.entries(totals)
+      .filter(([mode]) => mode.toUpperCase() !== "CREDIT")
+      .reduce((s, [, v]) => s + v, 0);
 
     /* ── REF — prefer backend-generated code, fall back to derived ── */
     const now      = new Date();
@@ -1120,40 +1163,102 @@ function PicklistRow({
                 </table>
               </div>
 
-              {/* ── Payment Summary Cards ── */}
-              {Object.keys(paymentTotals).length > 0 && (
-                <div style={{
-                  padding: "12px 20px",
-                  borderTop: "1px solid #e2e8f0",
-                  display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center",
-                  background: "#fafafa",
-                }}>
-                  <span style={{
-                    fontSize: 10.5, fontWeight: 700, color: "var(--ink-60)",
-                    textTransform: "uppercase", letterSpacing: "0.07em", marginRight: 4,
-                  }}>Collected</span>
-                  {Object.entries(paymentTotals).map(([mode, amount]) => {
-                    const s = MODE_STYLE[mode.toUpperCase()] ?? DEFAULT_MODE_STYLE;
-                    return (
-                      <div key={mode} style={{
-                        padding: "6px 16px", borderRadius: 9,
-                        background: s.bg, border: `1px solid ${s.border}`,
-                        display: "flex", alignItems: "center", gap: 8,
-                      }}>
-                        <span style={{ fontSize: 11.5, fontWeight: 700, color: s.color }}>{mode}</span>
-                        <span style={{ fontSize: 13.5, fontWeight: 800, color: s.color }}>
-                          ₹{amount.toLocaleString("en-IN")}
-                        </span>
+              {/* ── Payment Summary + Grand Total ── */}
+              {Object.keys(paymentTotals).length > 0 && (() => {
+                const grandTotal = Object.entries(paymentTotals)
+                  .filter(([mode]) => mode.toUpperCase() !== "CREDIT")
+                  .reduce((s, [, v]) => s + v, 0);
+                const totalNetValue = items.reduce((s, p) => s + (parseFloat(p.netValue) || 0), 0);
+                return (
+                  <div style={{ borderTop: "1px solid #e2e8f0", background: "#fafafa" }}>
+                    {/* Mode breakdown row */}
+                    <div style={{
+                      padding: "12px 20px",
+                      display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center",
+                    }}>
+                      <span style={{
+                        fontSize: 10.5, fontWeight: 700, color: "var(--ink-60)",
+                        textTransform: "uppercase", letterSpacing: "0.07em", marginRight: 4,
+                      }}>Collected</span>
+                      {Object.entries(paymentTotals).map(([mode, amount]) => {
+                        const s = MODE_STYLE[mode.toUpperCase()] ?? DEFAULT_MODE_STYLE;
+                        return (
+                          <div key={mode} style={{
+                            padding: "6px 16px", borderRadius: 9,
+                            background: s.bg, border: `1px solid ${s.border}`,
+                            display: "flex", alignItems: "center", gap: 8,
+                          }}>
+                            <span style={{ fontSize: 11.5, fontWeight: 700, color: s.color }}>{mode}</span>
+                            <span style={{ fontSize: 13.5, fontWeight: 800, color: s.color }}>
+                              ₹{amount.toLocaleString("en-IN")}
+                            </span>
+                          </div>
+                        );
+                      })}
+                      <span style={{ marginLeft: "auto", fontSize: 12, fontWeight: 600, color: "var(--ink-60)" }}>
+                        {items.length} picklist{items.length !== 1 ? "s" : ""}&nbsp;·&nbsp;
+                        {items.filter(p => p.assignStatus === 2).length} delivered&nbsp;·&nbsp;
+                        {items.filter(p => p.assignStatus !== 2).length} pending/failed
+                      </span>
+                    </div>
+
+                    {/* Grand total bar */}
+                    <div style={{
+                      padding: "12px 20px",
+                      borderTop: "1px solid #e2e8f0",
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      background: "#fff",
+                    }}>
+                      <div style={{ display: "flex", gap: 28 }}>
+                        <div>
+                          <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--ink-60)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 3 }}>
+                            Invoice Total
+                          </div>
+                          <div style={{ fontSize: 17, fontWeight: 800, color: "var(--ink)" }}>
+                            ₹{totalNetValue.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                          </div>
+                        </div>
+                        <div style={{ width: 1, background: "#e2e8f0" }} />
+                        <div>
+                          <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--ink-60)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 3 }}>
+                            Total Collected
+                          </div>
+                          <div style={{ fontSize: 17, fontWeight: 800, color: grandTotal >= totalNetValue * 0.99 ? "#065f46" : "#b45309" }}>
+                            ₹{grandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                          </div>
+                        </div>
+                        {Math.abs(grandTotal - totalNetValue) > 1 && (
+                          <>
+                            <div style={{ width: 1, background: "#e2e8f0" }} />
+                            <div>
+                              <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--ink-60)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 3 }}>
+                                Difference
+                              </div>
+                              <div style={{ fontSize: 17, fontWeight: 800, color: grandTotal > totalNetValue ? "#991b1b" : "#b45309" }}>
+                                {grandTotal > totalNetValue ? "+" : "−"}₹{Math.abs(grandTotal - totalNetValue).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                              </div>
+                            </div>
+                          </>
+                        )}
                       </div>
-                    );
-                  })}
-                  <span style={{ marginLeft: "auto", fontSize: 12, fontWeight: 700, color: "var(--ink-60)" }}>
-                    {items.length} picklist{items.length !== 1 ? "s" : ""}&nbsp;&nbsp;·&nbsp;&nbsp;
-                    {items.filter(p => p.assignStatus === 2).length} delivered&nbsp;&nbsp;·&nbsp;&nbsp;
-                    {items.filter(p => p.assignStatus !== 2).length} pending/failed
-                  </span>
-                </div>
-              )}
+
+                      {/* Grand total pill */}
+                      <div style={{
+                        padding: "10px 24px", borderRadius: 10,
+                        background: "var(--ink)", color: "#fff",
+                        textAlign: "center",
+                      }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", opacity: 0.6, marginBottom: 3 }}>
+                          Grand Total
+                        </div>
+                        <div style={{ fontSize: 20, fontWeight: 900 }}>
+                          ₹{grandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* ── Signature section (APPROVED only) ── */}
               {row.status === "APPROVED" && (
@@ -1288,10 +1393,7 @@ export default function DayEnd() {
     return nameOk && statusOk && dateOk;
   });
 
-  const counts = { PENDING: 0, APPROVED: 0, REJECTED: 0 };
-  data.forEach(r => { if (r.status in counts) counts[r.status]++; });
-
-  const COL_SPAN = 7;
+  const COL_SPAN = 5;
 
   return (
     <div className="animate-fade-up">
@@ -1318,23 +1420,6 @@ export default function DayEnd() {
           </Btn>
         }
       />
-
-      {/* Summary pills */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
-        {[
-          { label: "Pending",  count: counts.PENDING,  color: "#92400e", bg: "#fef3c7" },
-          { label: "Approved", count: counts.APPROVED, color: "#065f46", bg: "#d1fae5" },
-          { label: "Rejected", count: counts.REJECTED, color: "#991b1b", bg: "#fee2e2" },
-        ].map(s => (
-          <div key={s.label} style={{
-            padding: "10px 18px", borderRadius: "var(--radius-md)",
-            background: s.bg, display: "flex", alignItems: "center", gap: 10,
-          }}>
-            <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 22, fontWeight: 800, color: s.color }}>{s.count}</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: s.color }}>{s.label}</span>
-          </div>
-        ))}
-      </div>
 
       {/* Filters */}
       <Card style={{ marginBottom: 16 }} padding="14px 18px">
@@ -1378,7 +1463,7 @@ export default function DayEnd() {
 
       {/* Table */}
       <DataTable
-        headers={["Agent", "Day End ID", "Date", "Status", "Amount", "Reason", "Action"]}
+        headers={["Agent", "Day End ID", "Date", "Status", "Action"]}
         loading={loading}
         empty={filtered.length === 0}
         emptyText="No day-end records match your filters"
@@ -1429,16 +1514,6 @@ export default function DayEnd() {
 
                 {/* Status */}
                 <TD><StatusBadge status={row.status} /></TD>
-
-                {/* Amount */}
-                <TD style={{ fontWeight: 700, color: "var(--ink)", fontFamily: "'Inter', sans-serif" }}>
-                  ₹{row.totalAmount?.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                </TD>
-
-                {/* Reason */}
-                <TD style={{ color: "var(--ink-40)", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {row.rejectReason ?? "—"}
-                </TD>
 
                 {/* Action */}
                 <TD onClick={e => e.stopPropagation()}>
