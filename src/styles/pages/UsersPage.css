@@ -1,0 +1,22 @@
+/* ── UsersPage ──────────────────────────────────────────────────── */
+.users-page {}
+
+.users-page .users-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.users-page .users-table th {
+  padding: 9px 14px; font-size: 10.5px; font-weight: 700;
+  color: var(--ink-60); text-transform: uppercase;
+  letter-spacing: 0.06em; white-space: nowrap;
+  border-bottom: 1px solid var(--ink-10); background: var(--ink-5);
+}
+.users-page .users-table td { padding: 11px 14px; }
+.users-page .users-table tbody tr + tr { border-top: 1px solid var(--ink-5); }
+
+.users-page .role-badge {
+  font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 50px;
+  background: var(--brand-xlight); color: var(--brand); border: 1px solid var(--brand-light);
+}
+.users-page .add-user-modal {
+  background: #fff; border-radius: var(--radius-xl); width: 480px;
+  max-height: 88vh; overflow-y: auto;
+  border: 1px solid var(--ink-10); box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}

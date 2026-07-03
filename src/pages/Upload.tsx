@@ -1,3 +1,4 @@
+import '../styles/pages/Upload.css';
 import React, { useEffect, useState, useRef } from "react";
 import { ApiEndpoints } from "../constants/config";
 import { PageHeader, Card, Btn, Select, Field, Toast } from "../components/ui";

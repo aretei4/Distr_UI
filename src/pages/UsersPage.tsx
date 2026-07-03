@@ -1,3 +1,4 @@
+import '../styles/pages/UsersPage.css';
 import React, { useEffect, useState, useCallback } from "react";
 import {
   PageHeader, Card, DataTable, TR, TD,

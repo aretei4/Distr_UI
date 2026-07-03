@@ -1,0 +1,20 @@
+/* ── MapPage ────────────────────────────────────────────────────── */
+.map-page { height: 100%; display: flex; flex-direction: column; }
+
+.map-page .map-wrapper {
+  flex: 1; border-radius: var(--radius-xl); overflow: hidden;
+  border: 1px solid var(--ink-10); min-height: 500px;
+}
+
+.map-page .map-controls {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 16px; align-items: center;
+}
+
+.map-page .agent-filter-chip {
+  padding: 6px 14px; border-radius: 50px; font-size: 12px; font-weight: 600;
+  cursor: pointer; border: 1.5px solid var(--ink-10); transition: all 0.15s;
+}
+.map-page .agent-filter-chip--active {
+  border-color: var(--brand); background: var(--brand-xlight); color: var(--brand);
+}

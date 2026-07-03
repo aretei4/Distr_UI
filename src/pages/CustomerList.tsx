@@ -1,3 +1,4 @@
+import '../styles/pages/CustomerList.css';
 import React, { useEffect, useMemo, useState } from "react";
 import { CustomerService } from "../services/customerService";
 import { PageHeader, DataTable, TR, TD, SearchInput, Btn } from "../components/ui";

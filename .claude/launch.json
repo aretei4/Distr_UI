@@ -2,10 +2,11 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "app-preview",
+      "name": "device4autism",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "D:/project/distributor/wsp/Quick_Connect/design", "--no-clipboard", "-l", "3333"],
-      "port": 3333
+      "runtimeArgs": ["vite", "--host"],
+      "port": 5173,
+      "autoPort": true
     }
   ]
 }

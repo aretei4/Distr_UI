@@ -22,6 +22,9 @@ const UsersPage       = lazy(() => import("./pages/UsersPage"));
 const MapPage         = lazy(() => import("./pages/MapPage"));
 const SmartRoute      = lazy(() => import("./pages/SmartRoute"));
 const ConfigPage      = lazy(() => import("./pages/ConfigPage"));
+const DanClosePage          = lazy(() => import("./pages/DanClosePage"));
+const DeliveryViolationPage = lazy(() => import("./pages/DeliveryViolationPage"));
+const AssignmentPage        = lazy(() => import("./pages/AssignmentPage"));
 
 /**
  * ALL routes are always registered — no conditional route tree.
@@ -41,15 +44,18 @@ const App: React.FC = () => (
         <Route path="/sales/:picklistNo" element={<SalesDetail />} />
         <Route path="/agents"            element={<DeliveryAgents />} />
         <Route path="/agents/:agentId"   element={<DeliveryTable />} />
+        <Route path="/assignments"       element={<AssignmentPage />} />
         <Route path="/customer"          element={<CustomerList />} />
         <Route path="/delivery"          element={<DeliveryList />} />
         <Route path="/map"               element={<MapPage />} />
+        <Route path="/violation"         element={<DeliveryViolationPage />} />
         <Route path="/smart-route"       element={<SmartRoute />} />
         <Route path="/details/:status"   element={<DeliveryDetails />} />
 
         {/* Role-restricted pages */}
         <Route path="/upload"   element={<PrivateRoute roles={["ADMIN","MANAGER"]}><Upload /></PrivateRoute>} />
-        <Route path="/dayEnd"   element={<PrivateRoute roles={["ADMIN","MANAGER"]}><DayEnd /></PrivateRoute>} />
+        <Route path="/dayEnd"    element={<PrivateRoute roles={["ADMIN","MANAGER"]}><DayEnd /></PrivateRoute>} />
+        <Route path="/dan-close" element={<PrivateRoute roles={["ADMIN","MANAGER"]}><DanClosePage /></PrivateRoute>} />
         <Route path="/template" element={<PrivateRoute roles={["ADMIN"]}><Template /></PrivateRoute>} />
         <Route path="/users"    element={<PrivateRoute roles={["ADMIN","MANAGER"]}><UsersPage /></PrivateRoute>} />
         <Route path="/config"   element={<PrivateRoute roles={["ADMIN"]}><ConfigPage /></PrivateRoute>} />

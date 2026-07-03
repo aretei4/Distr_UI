@@ -1,3 +1,4 @@
+import '../styles/pages/SmartRoute.css';
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   GoogleMap, useJsApiLoader, Marker, InfoWindow, Polyline,

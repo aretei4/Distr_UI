@@ -1,3 +1,4 @@
+import '../styles/pages/DeliveryPage.css';
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { fetchDeliveryData } from "../services/DeliveryService";
@@ -259,20 +260,45 @@ const DeliveryPage: React.FC = () => {
       </div>
 
       <DataTable
-        headers={["ID", "Agent", "Picklist No", "Status", "OTP", "Payment Modes", "Reason", "Date"]}
+        headers={["DIRE ID", "Invoice No", "Agent", "Status", "OTP", "Payment Modes", "Reason", "Date"]}
         loading={loading}
         empty={!loading && filtered.length === 0}
         emptyText={fromDate && toDate ? "No records found for this range" : "Select a date range to load data"}
       >
         {filtered.map((d, i) => (
           <TR key={i}>
-            <TD style={{ fontWeight: 700, color: "var(--ink-60)", fontSize: 12 }}>#{d.delivery_id}</TD>
+
+            {/* DIRE ID */}
+            <TD>
+              {d.direId
+                ? <span style={{
+                    fontFamily: "monospace", fontWeight: 700, fontSize: 13,
+                    color: "#5b21b6", background: "#ede9fe",
+                    border: "1px solid #c4b5fd", borderRadius: 6,
+                    padding: "3px 9px", display: "inline-block",
+                  }}>#{d.direId}</span>
+                : <span style={{ color: "var(--ink-30)", fontSize: 12 }}>—</span>
+              }
+            </TD>
+
+            {/* Invoice No */}
+            <TD>
+              {d.invoiceNo
+                ? <span style={{
+                    fontFamily: "monospace", fontWeight: 600, fontSize: 12,
+                    color: "var(--ink)", background: "var(--ink-5)",
+                    border: "1px solid var(--ink-10)", borderRadius: 6,
+                    padding: "3px 9px", display: "inline-block",
+                  }}>{d.invoiceNo}</span>
+                : <span style={{ color: "var(--ink-30)", fontSize: 12 }}>—</span>
+              }
+            </TD>
+
             <TD>
               <div style={{ fontWeight: 600, color: "var(--ink)", fontSize: 13 }}>
                 {d.deliveryBoyName || "—"}
               </div>
             </TD>
-            <TD style={{ fontFamily: "monospace", fontSize: 12.5 }}>{d.picklist_no}</TD>
             <TD><StatusBadge status={d.status} /></TD>
             <TD><StatusBadge status={Boolean(d.otp) ? "YES" : "NO"} /></TD>
             <TD>

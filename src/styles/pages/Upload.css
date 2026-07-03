@@ -1,0 +1,32 @@
+/* ── Upload ─────────────────────────────────────────────────────── */
+.upload-page {}
+
+.upload-page .drop-zone {
+  border: 2px dashed var(--ink-20); border-radius: var(--radius-xl);
+  padding: 48px 24px; text-align: center; cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.upload-page .drop-zone:hover,
+.upload-page .drop-zone--active {
+  border-color: var(--brand); background: var(--brand-xlight);
+}
+.upload-page .drop-zone__icon { font-size: 40px; margin-bottom: 12px; }
+.upload-page .drop-zone__title { font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+.upload-page .drop-zone__sub { font-size: 13px; color: var(--ink-60); }
+
+.upload-page .upload-progress {
+  margin-top: 20px; background: var(--ink-5); border-radius: 8px;
+  height: 8px; overflow: hidden;
+}
+.upload-page .upload-progress__bar {
+  height: 100%; background: var(--brand); border-radius: 8px;
+  transition: width 0.3s ease;
+}
+
+.upload-page .result-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.upload-page .result-table th {
+  padding: 8px 12px; font-size: 10.5px; font-weight: 700;
+  color: var(--ink-60); text-transform: uppercase; letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--ink-10); background: var(--ink-5);
+}
+.upload-page .result-table td { padding: 10px 12px; border-bottom: 1px solid var(--ink-5); }

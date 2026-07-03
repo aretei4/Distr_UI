@@ -1,0 +1,22 @@
+/* ── SmartRoute ─────────────────────────────────────────────────── */
+.smart-route-page {}
+
+.smart-route-page .map-container {
+  border-radius: var(--radius-xl); overflow: hidden;
+  border: 1px solid var(--ink-10); box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+.smart-route-page .stop-list { display: flex; flex-direction: column; gap: 8px; }
+.smart-route-page .stop-card {
+  border-radius: 10px; padding: 12px 14px;
+  border: 1px solid var(--ink-10); background: #fff;
+  display: flex; align-items: center; gap: 12px;
+  cursor: grab; transition: box-shadow 0.15s;
+}
+.smart-route-page .stop-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.smart-route-page .stop-card__seq {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  background: var(--brand); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800;
+}

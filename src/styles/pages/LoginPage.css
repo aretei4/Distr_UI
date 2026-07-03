@@ -1,0 +1,35 @@
+/* ── LoginPage ──────────────────────────────────────────────────── */
+.login-page {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: var(--surface);
+}
+.login-page .login-card {
+  width: 100%; max-width: 420px; padding: 40px;
+  background: #fff; border-radius: var(--radius-xl);
+  border: 1px solid var(--ink-10); box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+}
+.login-page .login-card__logo { text-align: center; margin-bottom: 28px; }
+.login-page .login-card__title {
+  font-size: 22px; font-weight: 800; color: var(--ink);
+  text-align: center; margin-bottom: 6px;
+}
+.login-page .login-card__sub {
+  font-size: 13px; color: var(--ink-60); text-align: center; margin-bottom: 28px;
+}
+.login-page .form-group { margin-bottom: 16px; }
+.login-page .form-label {
+  display: block; font-size: 12px; font-weight: 700;
+  color: var(--ink-60); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.login-page .form-input {
+  width: 100%; padding: 10px 14px; box-sizing: border-box;
+  border: 1.5px solid var(--ink-10); border-radius: var(--radius-md);
+  font-size: 14px; font-family: 'Inter', sans-serif;
+  background: #fff; color: var(--ink); outline: none; transition: border 0.15s;
+}
+.login-page .form-input:focus { border-color: var(--brand); }
+.login-page .login-btn { width: 100%; margin-top: 8px; }
+.login-page .login-error {
+  font-size: 12px; color: #991b1b; background: #fee2e2;
+  border: 1px solid #fca5a5; border-radius: 8px; padding: 8px 12px; margin-bottom: 12px;
+}

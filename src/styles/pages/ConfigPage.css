@@ -1,0 +1,21 @@
+/* ── ConfigPage ─────────────────────────────────────────────────── */
+.config-page {}
+
+.config-page .config-section {
+  background: #fff; border-radius: var(--radius-xl);
+  border: 1px solid var(--ink-10); margin-bottom: 20px; overflow: hidden;
+}
+.config-page .config-section__header {
+  padding: 16px 20px; border-bottom: 1px solid var(--ink-10);
+  font-size: 14px; font-weight: 700; color: var(--ink);
+  display: flex; align-items: center; gap: 8px;
+}
+.config-page .config-section__body { padding: 20px; }
+
+.config-page .config-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 0; border-bottom: 1px solid var(--ink-5);
+}
+.config-page .config-row:last-child { border-bottom: none; }
+.config-page .config-row__label { font-size: 13px; font-weight: 600; color: var(--ink); }
+.config-page .config-row__sub { font-size: 11px; color: var(--ink-60); margin-top: 2px; }

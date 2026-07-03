@@ -1,3 +1,4 @@
+import '../styles/pages/ConfigPage.css';
 import React, { useEffect, useState, useCallback } from "react";
 import { PageHeader, Card, Toast } from "../components/ui";
 import { ApiEndpoints } from "../constants/config";

@@ -66,6 +66,7 @@ const BADGE_MAP: Record<string, { color: string; bg: string; dot: string }> = {
   NO:        { color: "#991b1b", bg: "#fee2e2", dot: "#ef4444" },
   DELIVERED: { color: "#065f46", bg: "#d1fae5", dot: "#10b981" },
   FAILED:    { color: "#991b1b", bg: "#fee2e2", dot: "#ef4444" },
+  CLOSED:    { color: "#1e40af", bg: "#dbeafe", dot: "#3b82f6" },
 };
 
 export const StatusBadge: React.FC<BadgeProps> = ({ status }) => {
@@ -187,8 +188,8 @@ export const TR: React.FC<{ children: React.ReactNode; onClick?: () => void }> =
   </tr>
 );
 
-export const TD: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => (
-  <td style={{ padding: "13px 16px", fontSize: 13.5, color: "var(--ink-80)", verticalAlign: "middle", ...style }}>
+export const TD: React.FC<{ children?: React.ReactNode; style?: React.CSSProperties; colSpan?: number }> = ({ children, style, colSpan }) => (
+  <td colSpan={colSpan} style={{ padding: "13px 16px", fontSize: 13.5, color: "var(--ink-80)", verticalAlign: "middle", ...style }}>
     {children}
   </td>
 );

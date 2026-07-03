@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ApiEndpoints } from "../constants/config";
 import { PageHeader, DataTable, TR, TD, Btn, Card, Field, TextInput } from "../components/ui";
 
-interface SalesEntry { picklistNo: string; custDesc: string; netValue: number; }
+interface SalesEntry { direId?: number; invoiceNo?: string; salesOrderNo?: string; picklistNo: string; custDesc: string; netValue: number; }
 interface DeliveryBoy { id: number; name: string; contact: string; }
 
 const SalesDetail: React.FC = () => {
@@ -38,8 +38,20 @@ const SalesDetail: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!boyId) { alert("Please select a delivery boy."); return; }
+
+    // Check for pending DANs before dispatching
+    try {
+      const check = await fetch(ApiEndpoints.PENDING_DAN_CHECK);
+      const checkJson = await check.json();
+      if (!checkJson.success) {
+        alert("⚠️ Cannot dispatch: " + checkJson.message);
+        return;
+      }
+    } catch { alert("❌ Could not verify DAN status. Please try again."); return; }
+
     const picklistNos = selected.map(s => s.picklistNo);
-    const payload: any = { deliveryBoyId: boyId, picklistNos };
+    const direIds = selected.map(s => s.direId).filter(Boolean);
+    const payload: any = { deliveryBoyId: boyId, picklistNos, direIds };
     if (carNo || driverName || mobile) payload.car = { carNo, driverName, mobile };
     try {
       const res = await fetch(ApiEndpoints.DELIVERY_ASIGN, {
@@ -106,14 +118,31 @@ const SalesDetail: React.FC = () => {
           style={{ padding: "9px 14px", border: "1.5px solid var(--ink-10)", borderRadius: "var(--radius-md)", fontSize: 13, fontFamily: "'Inter', sans-serif", outline: "none", width: 300 }} />
       </div>
 
-      <DataTable headers={["Picklist No", "Customer", "Net Value"]} empty={rows.length === 0}>
-        {rows.map(s => (
-          <TR key={s.picklistNo}>
-            <TD style={{ fontWeight: 700, fontFamily: "'Inter', sans-serif", color: "var(--brand)" }}>{s.picklistNo}</TD>
+      <DataTable headers={["#", "Invoice No", "Customer", "Net Value"]} empty={rows.length === 0}>
+        {rows.map((s, i) => (
+          <TR key={s.direId ?? s.picklistNo}>
+            <TD style={{ width: 40, color: "var(--ink-40)", fontSize: 12 }}>{i + 1}</TD>
+            <TD style={{ fontWeight: 700, fontFamily: "monospace", color: "#b45309" }}>
+              {s.salesOrderNo || s.invoiceNo || s.picklistNo || "—"}
+            </TD>
             <TD style={{ fontWeight: 500 }}>{s.custDesc}</TD>
-            <TD style={{ textAlign: "right", fontWeight: 700 }}>₹{s.netValue.toLocaleString("en-IN")}</TD>
+            <TD style={{ textAlign: "right", fontWeight: 700, whiteSpace: "nowrap" }}>
+              ₹{s.netValue.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+            </TD>
           </TR>
         ))}
+        {rows.length > 1 && (
+          <TR key="__total__">
+            <TD style={{ borderTop: "1px solid var(--ink-10)" }} />
+            <TD style={{ borderTop: "1px solid var(--ink-10)" }} />
+            <TD style={{ textAlign: "right", fontWeight: 700, fontSize: 13, color: "var(--ink-60)", borderTop: "1px solid var(--ink-10)" }}>
+              Total ({rows.length} items)
+            </TD>
+            <TD style={{ textAlign: "right", fontWeight: 800, fontSize: 15, color: "var(--brand)", borderTop: "1px solid var(--ink-10)", whiteSpace: "nowrap" }}>
+              ₹{rows.reduce((a, s) => a + s.netValue, 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+            </TD>
+          </TR>
+        )}
       </DataTable>
     </div>
   );

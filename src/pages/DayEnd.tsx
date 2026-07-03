@@ -1,3 +1,4 @@
+import '../styles/pages/DayEnd.css';
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import type { DayEndRecord, ToastState } from "./types";
@@ -11,6 +12,8 @@ import {
 
 /* ── Picklist model (enhanced with payment info) ──────────────────────────── */
 interface Picklist {
+  direId?:       number;
+  invoiceNo?:     string;
   picklistNo:     string;
   customerNo:     string;
   custDesc:       string;
@@ -335,7 +338,7 @@ function EditPicklistModal({
     setSaving(true); setError("");
     const paymentModeJson = delivered ? buildPaymentModeJson() : null;
     try {
-      const res = await fetch(ApiEndpoints.UPDATE_PICKLIST(picklist.picklistNo), {
+      const res = await fetch(ApiEndpoints.UPDATE_PICKLIST(picklist.direId!), {
         method: "PUT",
         headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({
@@ -619,11 +622,11 @@ function EditPicklistModal({
 
 /* ── Delete confirmation modal ────────────────────────────────────────────── */
 function DeleteConfirmModal({
-  picklistNo,
+  direId,
   onClose,
   onDeleted,
 }: {
-  picklistNo: string;
+  direId: number;
   onClose: () => void;
   onDeleted: () => void;
 }) {
@@ -633,7 +636,7 @@ function DeleteConfirmModal({
   const confirm = async () => {
     setLoading(true); setError("");
     try {
-      const res = await fetch(ApiEndpoints.DELETE_PICKLIST(picklistNo), {
+      const res = await fetch(ApiEndpoints.DELETE_PICKLIST(direId), {
         method: "DELETE",
         headers: authHeaders(),
       });
@@ -704,7 +707,7 @@ function PicklistRow({
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState("");
   const [editing,  setEditing]  = useState<Picklist | null>(null);
-  const [deleting, setDeleting] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<Picklist | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const printCard = () => {
@@ -904,12 +907,12 @@ function PicklistRow({
   useEffect(() => { load(); }, [load]);
 
   const handleSaved = (updated: Picklist) => {
-    setItems(prev => prev.map(p => p.picklistNo === updated.picklistNo ? updated : p));
+    setItems(prev => prev.map(p => p.direId === updated.direId ? updated : p));
     setEditing(null);
   };
 
-  const handleDeleted = (picklistNo: string) => {
-    setItems(prev => prev.filter(p => p.picklistNo !== picklistNo));
+  const handleDeleted = (direId: number) => {
+    setItems(prev => prev.filter(p => p.direId !== direId));
     setDeleting(null);
   };
 
@@ -930,7 +933,7 @@ function PicklistRow({
     <tr>
       <td colSpan={colSpan} style={{ padding: "0 0 4px" }}>
         {editing  && <EditPicklistModal picklist={editing}  onClose={() => setEditing(null)}  onSaved={handleSaved} />}
-        {deleting && <DeleteConfirmModal picklistNo={deleting} onClose={() => setDeleting(null)} onDeleted={() => handleDeleted(deleting)} />}
+        {deleting && <DeleteConfirmModal direId={deleting.direId!} onClose={() => setDeleting(null)} onDeleted={() => handleDeleted(deleting.direId!)} />}
 
         {/* ── Card ── */}
         <div ref={cardRef} style={{
@@ -1073,6 +1076,10 @@ function PicklistRow({
                           <td style={{ padding: "10px 14px" }}>
                             <div style={{ fontWeight: 600, color: "var(--ink)", fontSize: 13 }}>{p.custDesc || "—"}</div>
                             <div style={{ fontSize: 11, color: "var(--ink-40)", marginTop: 2, fontFamily: "monospace" }}>{p.customerNo}</div>
+                            <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
+                              {p.direId ? <span style={{ fontSize: 10, fontWeight: 700, color: "#5b21b6", background: "#ede9fe", border: "1px solid #c4b5fd", borderRadius: 4, padding: "1px 6px" }}>DIRE #{p.direId}</span> : null}
+                              {p.invoiceNo ? <span style={{ fontSize: 10, fontWeight: 600, color: "var(--ink-60)", background: "var(--ink-5)", border: "1px solid var(--ink-10)", borderRadius: 4, padding: "1px 6px" }}>INV {p.invoiceNo}</span> : null}
+                            </div>
                           </td>
 
                           {/* NET VALUE */}
@@ -1148,7 +1155,7 @@ function PicklistRow({
                                   border: "1.5px solid var(--brand)", background: "var(--brand-light)",
                                   color: "var(--brand)", fontSize: 11, fontWeight: 700, cursor: "pointer",
                                 }}>✏</button>
-                                <button onClick={() => setDeleting(p.picklistNo)} title="Delete" style={{
+                                <button onClick={() => setDeleting(p)} title="Delete" style={{
                                   padding: "5px 11px", borderRadius: 6,
                                   border: "1.5px solid #fca5a5", background: "#fee2e2",
                                   color: "#991b1b", fontSize: 11, fontWeight: 700, cursor: "pointer",
@@ -1471,9 +1478,8 @@ export default function DayEnd() {
         {filtered.map(row => {
           const isOpen = expandedId === row.dayendId;
           return (
-            <>
+            <React.Fragment key={row.dayendId}>
               <TR
-                key={row.dayendId}
                 style={{ background: isOpen ? "var(--brand-xlight)" : undefined }}
               >
                 {/* Agent */}
@@ -1551,7 +1557,6 @@ export default function DayEnd() {
               {/* Expanded picklist card */}
               {isOpen && (
                 <PicklistRow
-                  key={`pl_${row.dayendId}`}
                   dayendId={row.dayendId}
                   colSpan={COL_SPAN}
                   row={row}
@@ -1559,7 +1564,7 @@ export default function DayEnd() {
                   onReject={() => setRejectRec(row)}
                 />
               )}
-            </>
+            </React.Fragment>
           );
         })}
       </DataTable>

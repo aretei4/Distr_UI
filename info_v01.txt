@@ -8,14 +8,21 @@ kill $(cat /home/ubuntu/app/app.pid)
 
 # Watch logs
 tail -f /home/ubuntu/app/app.log
-
+D:\work\project\qualyc\unix
+D:\project\distributor\wsp\qualcy_jwt
+D:\project\claude\device4autism
 # Check running
 lsof -i :8080
 
-ssh -i tomcat ubuntu@device4autism.in
-scp -i tomcat -r "D:\project\distributor\setup\direcon" ubuntu@device4autism.in:/home/ubuntu
-scp -i tomcat -r "D:\project\claude\device4autism\dist" ubuntu@device4autism.in:/home/ubuntu/direcon
-scp -i tomcat "D:\project\distributor\wsp\qualcy_jwt\target\distr.jar" ubuntu@device4autism.in:/home/ubuntu/direco/app/app.jar
 
+ssh -i tomcat ubuntu@device4autism.in
+scp -i tomcat -r "D:\project\distributor\setup\direcon\nginx\trail1.device4autism.in.conf" ubuntu@device4autism.in:/home/ubuntu/temp
+scp -i tomcat -r "D:\project\claude\device4autism\dist" ubuntu@device4autism.in:/home/ubuntu/direcon
+scp -i tomcat "D:\project\distributor\wsp\qualcy_jwt\target\distr.jar" ubuntu@device4autism.in:/home/ubuntu/direcon/app/app.jar
+scp -i tomcat -r "D:\project\claude\device4autism\direcon" ubuntu@device4autism.in:/home/ubuntu/direcon
 
 scp -i tomcat -r "D:\project\claude\device4autism\direcon" ubuntu@device4autism.in:/home/ubuntu/direcon
+
+pg_dump -h 52.66.119.34 -p 5432 -U postgres -d distr_v01 --schema-only -f D:\project\distributor\db\schema_v02.sql
+createdb -h 52.66.119.34 -p 5432 -U postgres distr_v03
+psql -h 52.66.119.34 -p 5432 -U postgres -d distr_v03 -f D:\project\distributor\db\schema_v02.sql

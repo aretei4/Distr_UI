@@ -1,3 +1,4 @@
+import '../styles/pages/LoginPage.css';
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../services/authService";

@@ -1,3 +1,4 @@
+import '../styles/pages/Dashboard.css';
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader, Card, SearchInput } from "../components/ui";

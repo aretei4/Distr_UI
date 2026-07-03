@@ -1,3 +1,4 @@
+import '../styles/pages/MapPage.css';
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from "@react-google-maps/api";
 import CalendarInput from "../components/CalendarInput";

@@ -1,33 +1,22 @@
 {
   "permissions": {
     "allow": [
-      "Bash(Get-ChildItem -Path \"D:\\\\project\\\\distributor\\\\wsp\\\\Quick_Connect\" -Recurse -Directory)",
-      "Bash(Select-Object FullName)",
       "Bash(python3)",
-      "Bash(ls \"D:\\\\project\\\\distributor\\\\wsp\\\\Quick_Connect\\\\app\\\\src\\\\main\\\\res\\\\layout\\\\\" | sed 's/\\\\.xml//')",
-      "Bash(xargs -I {} basename {} .xml)",
-      "mcp__Claude_in_Chrome__tabs_context_mcp",
-      "WebFetch(domain:www.wtwco.com)",
+      "Bash(npm install *)",
+      "Bash(npx tsc *)",
       "WebSearch",
+      "WebFetch(domain:www.wtwco.com)",
       "WebFetch(domain:ux.willistowerswatson.com)",
       "WebFetch(domain:rebrand.com)",
-      "Bash(powershell -Command \"\\(Get-Content 'D:\\\\project\\\\claude\\\\device4autism\\\\src\\\\pages\\\\LoginPage.tsx'\\) -replace \\\\\"'Syne', sans-serif\\\\\", \\\\\"'Inter', sans-serif\\\\\" | Set-Content 'D:\\\\project\\\\claude\\\\device4autism\\\\src\\\\pages\\\\LoginPage.tsx' -Encoding utf8\")",
-      "Bash(Get-ChildItem -Path \"D:\\\\project\\\\distributor\\\\wsp\\\\Quick_Connect\" -Recurse -Include \"ApiService.kt\", \"ListFragment.kt\", \"ListViewModel.kt\", \"*DeliveryItem*\", \"*DeliveryListItem*\", \"*DeliveryResponse*\" -ErrorAction SilentlyContinue)",
-      "Bash(find \"D:\\\\project\\\\distributor\" -maxdepth 3 -type f -name \"*.sql\" 2>/dev/null | head -20)",
-      "Bash(npm install *)",
-      "Bash(Get-ChildItem -Path \"D:\\\\project\\\\voter\\\\wsp\\\\Popinion\" -Recurse -Force)",
       "WebFetch(domain:claude.ai)",
-      "Read(//d/project/voter/claude/**)",
-      "Bash(python -c ' *)",
-      "Bash(python -c \"import sys; sys.stdout.buffer.write\\(sys.stdin.buffer.read\\(\\)\\)\")",
-      "Bash(cd /d \"D:\\\\project\\\\voter\\\\claude\")",
+      "WebFetch(domain:device4autism.in)",
       "Skill(anthropic-skills:docx)",
       "Skill(anthropic-skills:docx:*)",
-      "Read(//c/Users/USER/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/619cdcb0-937e-4c94-a60c-e19db776c6d6/851b3c3b-c782-40e0-83c8-78e7f7933a5e/skills/docx/**)",
-      "Bash(python scripts/office/unpack.py \"D:\\\\personal\\\\resume\\\\Subash_CV_Latest.docx\" \"D:\\\\personal\\\\resume\\\\unpacked_cv\\\\\")",
-      "PowerShell(pip install defusedxml -q)",
-      "Bash(mkdir -p \"D:\\\\project\\\\distributor\\\\wsp\\\\Quick_Connect\\\\.idea\\\\runConfigurations\")",
-      "Bash(rm \"D:/project/distributor/wsp/Quick_Connect/.idea/runConfigurations/app.xml\")"
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "mcp__Claude_Preview__preview_start",
+      "mcp__visualize__read_me",
+      "Read(D:\\project\\distributor\\wsp\\Quick_Connect\\**)",
+      "Read(D:\\project\\distributor\\wsp\\qualcy_jwt\\**)"
     ]
   }
 }

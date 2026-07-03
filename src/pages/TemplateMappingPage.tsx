@@ -1,3 +1,4 @@
+import '../styles/pages/TemplateMappingPage.css';
 import React, { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
 import { saveTemplate } from "../services/template.service";
@@ -24,12 +25,34 @@ const TEMPLATE_FIELDS: Record<string, string[]> = {
     "City", "Pin Code", "Father Name",
     "Aadhar No", "PAN Card", "Bank Account", "Date of Joining",
   ],
-  sales: ["PicklistNo", "CustomerName", "CustomerNo", "NetValue", "BillingDate"],
+  sales: ["PicklistNo", "InvoiceNo", "CustomerName", "CustomerNo", "SalesRepName", "NetValue", "BillingDate"],
+  customer: [
+    "Customer No", "Customer Name", "Mobile",
+    "Address Line 1", "Address Line 2", "Pin Code", "Lat", "Lon",
+  ],
 };
+
+const OPTIONAL_FIELDS: Record<string, string[]> = {
+  sales:    ["PicklistNo"],
+  customer: ["Address Line 2", "Lat", "Lon"],
+};
+
+// Template types that contain date columns
+const HAS_DATE_FIELDS = new Set(["sales", "delivery"]);
+
+const DATE_FORMATS = [
+  "DD/MM/YYYY",
+  "MM/DD/YYYY",
+  "YYYY-MM-DD",
+  "DD-MM-YYYY",
+  "DD.MM.YYYY",
+  "YYYY/MM/DD",
+];
 
 const TYPE_LABELS: Record<string, string> = {
   delivery: "Delivery Agent",
   sales:    "Invoice / Sales",
+  customer: "Customer Master",
 };
 
 // ── Step indicator ────────────────────────────────────────────────────────────
@@ -98,6 +121,7 @@ const TemplateMappingPage: React.FC = () => {
 
   // mappings
   const [mappings, setMappings]           = useState<Record<string, string>>({});
+  const [dateFormat, setDateFormat]       = useState("DD/MM/YYYY");
   const [errorMsg, setErrorMsg]           = useState("");
   const [saving, setSaving]               = useState(false);
 
@@ -122,8 +146,11 @@ const TemplateMappingPage: React.FC = () => {
       .then(r => r.ok ? r.json() : [])
       .then((list: { templateType: string; mappings: Record<string, string> }[]) => {
         const existing = list.find(t => t.templateType === templateType);
-        if (existing?.mappings) setMappings(existing.mappings);
-        else setMappings({});
+        if (existing?.mappings) {
+          const { _dateFormat, ...rest } = existing.mappings as Record<string, string>;
+          setMappings(rest);
+          if (_dateFormat) setDateFormat(_dateFormat);
+        } else setMappings({});
       })
       .catch(() => setMappings({}));
   }, [companyName, templateType]);
@@ -171,13 +198,20 @@ const TemplateMappingPage: React.FC = () => {
 
   const handleSave = async () => {
     if (!companyName || !templateType) return;
-    if (Object.keys(mappings).length !== fields.length) {
-      setErrorMsg("Map all fields before saving.");
+    const optionals = OPTIONAL_FIELDS[templateType] ?? [];
+    const requiredFields = fields.filter(f => !optionals.includes(f));
+    const mappedFields = Object.values(mappings);
+    const unmapped = requiredFields.filter(f => !mappedFields.includes(f));
+    if (unmapped.length > 0) {
+      setErrorMsg(`Map all required fields before saving. Missing: ${unmapped.join(", ")}`);
       return;
     }
     setSaving(true);
     try {
-      await saveTemplate({ companyName, templateType, mappings });
+      const payload = HAS_DATE_FIELDS.has(templateType)
+        ? { companyName, templateType, mappings: { ...mappings, _dateFormat: dateFormat } }
+        : { companyName, templateType, mappings };
+      await saveTemplate(payload);
       if (!companies.includes(companyName)) setCompanies(prev => [...prev, companyName].sort());
       alert("✅ Template saved!");
     } catch {
@@ -189,7 +223,7 @@ const TemplateMappingPage: React.FC = () => {
 
   const resetAll = () => {
     setCompanyName(""); setTemplateType(""); setHeaders([]);
-    setMappings({}); setUploadMsg(""); setErrorMsg("");
+    setMappings({}); setDateFormat("DD/MM/YYYY"); setUploadMsg(""); setErrorMsg("");
     setAddingNew(false); setNewCompany("");
   };
 
@@ -283,10 +317,40 @@ const TemplateMappingPage: React.FC = () => {
               </Select>
             </Field>
 
+            {/* Date format — only for templates with date columns */}
+            {templateType && HAS_DATE_FIELDS.has(templateType) && (
+              <Field label="Date Format" required style={{ marginTop: 12 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
+                  {DATE_FORMATS.map(f => (
+                    <button
+                      key={f}
+                      onClick={() => setDateFormat(f)}
+                      style={{
+                        padding: "5px 14px", borderRadius: 7, fontSize: 12.5, fontWeight: 600,
+                        cursor: "pointer", transition: "all .12s",
+                        border: dateFormat === f ? "2px solid var(--brand)" : "1.5px solid var(--ink-10)",
+                        background: dateFormat === f ? "var(--brand)" : "#fff",
+                        color: dateFormat === f ? "#fff" : "var(--ink-60)",
+                      }}>
+                      {f}
+                    </button>
+                  ))}
+                </div>
+                <p style={{ fontSize: 11, color: "var(--ink-40)", marginTop: 6 }}>
+                  Selected: <strong>{dateFormat}</strong> — used when parsing date columns from the Excel file
+                </p>
+              </Field>
+            )}
+
             {step > 2 && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
                 <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--ink)" }}>
                   {TYPE_LABELS[templateType]}
+                  {HAS_DATE_FIELDS.has(templateType) && (
+                    <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 500, color: "var(--brand)", background: "var(--brand-light)", padding: "2px 8px", borderRadius: 4 }}>
+                      {dateFormat}
+                    </span>
+                  )}
                 </span>
                 <button
                   onClick={() => { setTemplateType(""); setHeaders([]); setMappings({}); }}
@@ -342,10 +406,14 @@ const TemplateMappingPage: React.FC = () => {
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {fields.map(field => {
                 const mapped = Object.entries(mappings).find(([, v]) => v === field)?.[0] || "";
+                const isOptional = (OPTIONAL_FIELDS[templateType] ?? []).includes(field);
                 return (
                   <div key={field} style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                    <span style={{ minWidth: 150, fontSize: 13.5, fontWeight: 600, color: "var(--ink)" }}>
+                    <span style={{ minWidth: 150, fontSize: 13.5, fontWeight: 600, color: "var(--ink)", display: "flex", alignItems: "center", gap: 6 }}>
                       {field}
+                      {isOptional && (
+                        <span style={{ fontSize: 10, fontWeight: 500, color: "#64748b", background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: 4, padding: "1px 6px" }}>optional</span>
+                      )}
                     </span>
                     <Select
                       value={mapped}
@@ -368,23 +436,29 @@ const TemplateMappingPage: React.FC = () => {
               })}
             </div>
 
-            <div style={{ marginTop: 22, display: "flex", gap: 10 }}>
-              <Btn
-                variant="primary"
-                onClick={handleSave}
-                disabled={saving || Object.keys(mappings).length !== fields.length}
-              >
-                {saving ? "Saving…" : "Save Template"}
-              </Btn>
-              <Btn variant="secondary" onClick={() => { setMappings({}); setHeaders([]); setUploadMsg(""); }}>
-                Reset Mappings
-              </Btn>
-            </div>
-
-            {/* progress */}
-            <p style={{ fontSize: 11.5, color: "var(--ink-40)", marginTop: 10 }}>
-              {Object.keys(mappings).length} / {fields.length} fields mapped
-            </p>
+            {(() => {
+              const optionals = OPTIONAL_FIELDS[templateType] ?? [];
+              const requiredFields = fields.filter(f => !optionals.includes(f));
+              const mappedFields = Object.values(mappings);
+              const allRequiredMapped = requiredFields.every(f => mappedFields.includes(f));
+              const mappedCount = fields.filter(f => mappedFields.includes(f)).length;
+              const requiredRemaining = requiredFields.filter(f => !mappedFields.includes(f)).length;
+              return (
+                <>
+                  <div style={{ marginTop: 22, display: "flex", gap: 10, alignItems: "center" }}>
+                    <Btn variant="primary" onClick={handleSave} disabled={saving || !allRequiredMapped}>
+                      {saving ? "Saving…" : "Save Template"}
+                    </Btn>
+                    <Btn variant="secondary" onClick={() => { setMappings({}); setHeaders([]); setUploadMsg(""); }}>
+                      Reset Mappings
+                    </Btn>
+                    <p style={{ fontSize: 11.5, color: "var(--ink-40)", margin: 0 }}>
+                      {mappedCount} / {fields.length} mapped{requiredRemaining > 0 ? ` · ${requiredRemaining} required remaining` : ""}
+                    </p>
+                  </div>
+                </>
+              );
+            })()}
           </Step>
         )}
       </Card>
