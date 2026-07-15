@@ -3,8 +3,8 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader, Card, SearchInput } from "../components/ui";
 import {
-  getDeliverySummary, fetchDeliveryAgents,
-  DeliverySummary, DeliveryBoy,
+  getDeliverySummary, getOverallSummary, fetchDeliveryAgents,
+  DeliverySummary, OverallSummary, DeliveryBoy,
 } from "../services/dashboardService";
 import { ApiEndpoints } from "../constants/config";
 import { authHeaders } from "../services/authService";
@@ -34,6 +34,12 @@ const DEMO: DeliverySummary = {
   totalDeliveries: 248, delivered: 198, pending: 42, cancelled: 8,
   todayNetValue: 78060,   totalNetValue: 980000,
   todayCollected: 52148,  totalCollected: 742000,
+  assigned: 3, assignedValue: 15400,
+  rejected: 1, rejectedValue: 4200,
+};
+
+const DEMO_OVERALL: OverallSummary = {
+  closed: 198, closedValue: 742000, closedCollected: 715000,
 };
 
 /* ── helpers ─────────────────────────────────────────────────────────────── */
@@ -103,6 +109,7 @@ function WideCard({
 const Dashboard: React.FC = () => {
   const [tab, setTab]               = useState<"today" | "overall">("today");
   const [summary, setSummary]       = useState<DeliverySummary | null>(null);
+  const [overall, setOverall]       = useState<OverallSummary | null>(null);
   const [deliveryBoys, setDeliveryBoys] = useState<DeliveryBoy[]>([]);
   const [selectedBoy, setSelectedBoy]  = useState<DeliveryBoy | null>(null);
   const [search, setSearch]            = useState("");
@@ -121,6 +128,10 @@ const Dashboard: React.FC = () => {
     try {
       const data = await getDeliverySummary(selectedBoy?.id ?? null);
       setSummary(data);
+    } catch { /* keep demo */ }
+    try {
+      const ov = await getOverallSummary(selectedBoy?.id ?? null);
+      setOverall(ov);
     } catch { /* keep demo */ }
   }, [selectedBoy]);
 
@@ -146,6 +157,7 @@ const Dashboard: React.FC = () => {
   }, [loadOnlineAgents]);
 
   const s = summary ?? DEMO;
+  const o = overall ?? DEMO_OVERALL;
   const todayStr = new Date().toLocaleDateString("en-GB");
 
   const filteredBoys = deliveryBoys.filter(b =>
@@ -156,22 +168,21 @@ const Dashboard: React.FC = () => {
   const isToday = tab === "today";
   const cards = isToday
     ? [
-        { label: "Total deliveries", count: s.todayTotal,     amount: s.todayNetValue   ?? 0, color: "#5b21b6", bg: "#ede9fe", filter: "ALL" },
+        { label: "Total", count: s.todayTotal,     amount: s.todayNetValue   ?? 0, color: "#5b21b6", bg: "#ede9fe", filter: "ALL" },
+        { label: "Assignments",      count: s.assigned ?? 0,  amount: s.assignedValue   ?? 0, color: "#1e40af", bg: "#dbeafe", filter: "ALL", to: "/assignments?status=9" },
+        { label: "Rejected",         count: s.rejected ?? 0,  amount: s.rejectedValue   ?? 0, color: "#7f1d1d", bg: "#fee2e2", filter: "ALL", to: "/assignments?status=8" },
         { label: "Delivered",        count: s.todayDelivered, amount: s.todayCollected  ?? 0, color: "#065f46", bg: "#d1fae5", filter: "YES" },
         { label: "Pending",          count: s.todayPending,   amount: 0,                       color: "#b45309", bg: "#fef3c7", filter: "NO"  },
         { label: "Cancelled",        count: s.todayCancelled, amount: 0,                       color: "#9d174d", bg: "#fce7f3", filter: "NO"  },
       ]
     : [
-        { label: "Total deliveries", count: s.totalDeliveries, amount: s.totalNetValue  ?? 0, color: "#5b21b6", bg: "#ede9fe", filter: "ALL" },
-        { label: "Delivered",        count: s.delivered,        amount: s.totalCollected ?? 0, color: "#065f46", bg: "#d1fae5", filter: "YES" },
-        { label: "Pending",          count: s.pending,          amount: 0,                      color: "#b45309", bg: "#fef3c7", filter: "NO"  },
-        { label: "Cancelled",        count: s.cancelled,        amount: 0,                      color: "#9d174d", bg: "#fce7f3", filter: "NO"  },
+        { label: "Closed", count: o.closed, amount: o.closedValue ?? 0, color: "#1e40af", bg: "#dbeafe", filter: "ALL", to: "/invoice-report" },
       ];
 
-  const netValue  = isToday ? (s.todayNetValue  ?? 0) : (s.totalNetValue  ?? 0);
-  const collected = isToday ? (s.todayCollected ?? 0) : (s.totalCollected ?? 0);
-  const netLabel  = isToday ? "Total invoice value today"      : "Cumulative invoice value";
-  const colLabel  = isToday ? "Payment received today"         : "Cumulative payment received";
+  const netValue  = isToday ? (s.todayNetValue  ?? 0) : (o.closedValue     ?? 0);
+  const collected = isToday ? (s.todayCollected ?? 0) : (o.closedCollected ?? 0);
+  const netLabel  = isToday ? "Total invoice value today"      : "Closed orders invoice value";
+  const colLabel  = isToday ? "Payment received today"         : "Closed orders payment received";
 
   return (
     <div className="animate-fade-up">
@@ -246,7 +257,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* ── Stat cards ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14, marginBottom: 16 }}>
         {cards.map(c => (
           <MiniCard
             key={c.label}
@@ -255,10 +266,12 @@ const Dashboard: React.FC = () => {
             amount={c.amount}
             color={c.color}
             bg={c.bg}
-            onClick={() => isToday
-              ? navigate(`/delivery?delivered=${c.filter}&from=${todayStr}&to=${todayStr}`)
-              : navigate(`/delivery?delivered=${c.filter}`)
-            }
+            onClick={() => {
+              if ("to" in c && c.to) { navigate(c.to); return; }
+              isToday
+                ? navigate(`/delivery?delivered=${c.filter}&from=${todayStr}&to=${todayStr}`)
+                : navigate(`/delivery?delivered=${c.filter}`);
+            }}
           />
         ))}
       </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { ApiEndpoints } from "../constants/config";
-import { PageHeader, DataTable, TR, TD, SearchInput, Btn } from "../components/ui";
+import { PageHeader, DataTable, TR, TD, SearchInput, Btn, Select } from "../components/ui";
 
 interface Assignment {
   direId:      number;
@@ -20,25 +21,43 @@ const STATUS_STYLE: Record<string, { color: string; bg: string }> = {
   PENDING:   { color: "#92400e", bg: "#fef3c7" },
   DELIVERED: { color: "#166534", bg: "#dcfce7" },
   FAILED:    { color: "#991b1b", bg: "#fee2e2" },
+  REJECTED:  { color: "#7f1d1d", bg: "#fee2e2" },
 };
+
+const STATUS_OPTIONS = [
+  { value: "all", label: "All Status" },
+  { value: "9",   label: "Assigned" },
+  { value: "0",   label: "Pending" },
+  { value: "2",   label: "Delivered" },
+  { value: "1",   label: "Failed" },
+  { value: "8",   label: "Rejected" },
+];
 
 const toDay       = () => { const d = new Date(); return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`; };
 const oneMonthAgo = () => { const d = new Date(); d.setMonth(d.getMonth()-1); return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`; };
 
 const AssignmentPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [data,     setData]     = useState<Assignment[]>([]);
   const [filtered, setFiltered] = useState<Assignment[]>([]);
   const [loading,  setLoading]  = useState(false);
   const [search,   setSearch]   = useState("");
+  const statusFilter = searchParams.get("status") ?? "all";
+
+  const setStatusFilter = (v: string) => {
+    if (v === "all") setSearchParams({});
+    else             setSearchParams({ status: v });
+  };
 
   const load = useCallback(() => {
     setLoading(true);
-    fetch(`${ApiEndpoints.ASSIGNMENTS}`)
+    const qs = statusFilter !== "all" ? `?status=${statusFilter}` : "";
+    fetch(`${ApiEndpoints.ASSIGNMENTS}${qs}`)
       .then(r => r.json())
       .then(rows => { setData(rows); setFiltered(rows); })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [statusFilter]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -71,8 +90,16 @@ const AssignmentPage: React.FC = () => {
         subtitle={`${filtered.length} records · ₹${totalValue.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`}
       />
 
-      <div style={{ marginBottom: 14 }}>
+      <div style={{ marginBottom: 14, display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap" }}>
         <SearchInput value={search} onChange={setSearch} placeholder="Search customer, invoice, agent…" width="340px" />
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <label style={{ fontSize: 11, color: "var(--ink-60)", fontWeight: 600 }}>STATUS</label>
+          <Select value={statusFilter} onChange={setStatusFilter}>
+            {STATUS_OPTIONS.map(o => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </Select>
+        </div>
       </div>
 
       <DataTable

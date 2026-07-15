@@ -25,6 +25,8 @@ const ConfigPage      = lazy(() => import("./pages/ConfigPage"));
 const DanClosePage          = lazy(() => import("./pages/DanClosePage"));
 const DeliveryViolationPage = lazy(() => import("./pages/DeliveryViolationPage"));
 const AssignmentPage        = lazy(() => import("./pages/AssignmentPage"));
+const DanReportPage         = lazy(() => import("./pages/DanReportPage"));
+const InvoiceReportPage     = lazy(() => import("./pages/InvoiceReportPage"));
 
 /**
  * ALL routes are always registered — no conditional route tree.
@@ -47,6 +49,7 @@ const App: React.FC = () => (
         <Route path="/assignments"       element={<AssignmentPage />} />
         <Route path="/customer"          element={<CustomerList />} />
         <Route path="/delivery"          element={<DeliveryList />} />
+        <Route path="/invoice-report"    element={<InvoiceReportPage />} />
         <Route path="/map"               element={<MapPage />} />
         <Route path="/violation"         element={<DeliveryViolationPage />} />
         <Route path="/smart-route"       element={<SmartRoute />} />
@@ -56,6 +59,7 @@ const App: React.FC = () => (
         <Route path="/upload"   element={<PrivateRoute roles={["ADMIN","MANAGER"]}><Upload /></PrivateRoute>} />
         <Route path="/dayEnd"    element={<PrivateRoute roles={["ADMIN","MANAGER"]}><DayEnd /></PrivateRoute>} />
         <Route path="/dan-close" element={<PrivateRoute roles={["ADMIN","MANAGER"]}><DanClosePage /></PrivateRoute>} />
+        <Route path="/dan-report" element={<PrivateRoute roles={["ADMIN","MANAGER"]}><DanReportPage /></PrivateRoute>} />
         <Route path="/template" element={<PrivateRoute roles={["ADMIN"]}><Template /></PrivateRoute>} />
         <Route path="/users"    element={<PrivateRoute roles={["ADMIN","MANAGER"]}><UsersPage /></PrivateRoute>} />
         <Route path="/config"   element={<PrivateRoute roles={["ADMIN"]}><ConfigPage /></PrivateRoute>} />

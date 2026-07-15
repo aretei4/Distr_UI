@@ -64,6 +64,7 @@ export const ApiEndpoints = {
   get PENDING_DAN_CHECK()    { return `${getApiBaseUrl()}/delivery/pending-dan-check`; },
   get SMART_ROUTE_ASSIGN()   { return `${getApiBaseUrl()}/delivery/smart-assign`; },
   get DELIVERY_STATUS_LIST() { return `${getApiBaseUrl()}/delivery/statusList`; },
+  get INVOICE_REPORT()       { return `${getApiBaseUrl()}/delivery/invoiceReport`; },
   get DELETE_DELIVERY()                      { return `${getApiBaseUrl()}/delivery/delete`; },
   DELETE_DELIVERY_BY_DIRE: (direId: number) => `${getApiBaseUrl()}/delivery/delete/dire/${direId}`,
   get DELIVERY_ASIGN_LIST()  { return `${getApiBaseUrl()}/delivery/deliveryList?deliveri_id=`; },
@@ -74,6 +75,7 @@ export const ApiEndpoints = {
   get TEMPLATE_COMPANIES()   { return `${getApiBaseUrl()}/template/companies`; },
   TEMPLATES_BY_COMPANY: (company: string) => `${getApiBaseUrl()}/template/by-company/${encodeURIComponent(company)}`,
   get DELIVERY_DASHBOARD()   { return `${getApiBaseUrl()}/dashboard/delivery-summary`; },
+  get OVERALL_SUMMARY()      { return `${getApiBaseUrl()}/dashboard/overall-summary`; },
   get DELIVERY_STATUS()      { return `${getApiBaseUrl()}/dashboard/delivery-summary`; },
   get DAY_END_SUMMARY()      { return `${getApiBaseUrl()}/dayend/dayEndSummery`; },
   get DAY_END_APPROVE()      { return `${getApiBaseUrl()}/dayend/approve`; },
@@ -84,7 +86,6 @@ export const ApiEndpoints = {
   get ASSIGNMENTS()          { return `${getApiBaseUrl()}/delivery/assignments`; },
   CUSTOMER_LOCATION: (custNo: string) => `${getApiBaseUrl()}/customer/${encodeURIComponent(custNo)}/location`,
   get WAREHOUSES()           { return `${getApiBaseUrl()}/warehouse`; },
-  SMART_ROUTE_POINTS:  (from: string, to: string) => `${getApiBaseUrl()}/delivery/map?fromDate=${from}&toDate=${to}`,
   PICKLISTS_BY_AGENT:  (id: string | number) => `${getApiBaseUrl()}/dayend/picklists/${id}`,
   UPDATE_PICKLIST:     (direId: number) => `${getApiBaseUrl()}/dayend/picklist/dire/${direId}`,
   DELETE_PICKLIST:     (direId: number) => `${getApiBaseUrl()}/dayend/picklist/dire/${direId}`,
@@ -97,6 +98,8 @@ export const ApiEndpoints = {
 
   // DAN Close
   get DAN_LIST()                    { return `${getApiBaseUrl()}/dan/list`; },
+  get DAN_REPORT()                  { return `${getApiBaseUrl()}/dan/report`; },
+  DAN_REPORT_DETAIL: (danId: number) => `${getApiBaseUrl()}/dan/report/${danId}`,
   DAN_RETURNS:      (direId: number) => `${getApiBaseUrl()}/dan/returns/dire/${direId}`,
   DAN_PAYMENT:      (id: number, direId: number) => `${getApiBaseUrl()}/dan/${id}/payment/dire/${direId}`,
   DAN_SUBMIT:       (id: number)    => `${getApiBaseUrl()}/dan/${id}/submit`,

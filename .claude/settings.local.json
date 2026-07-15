@@ -16,7 +16,16 @@
       "mcp__Claude_Preview__preview_start",
       "mcp__visualize__read_me",
       "Read(D:\\project\\distributor\\wsp\\Quick_Connect\\**)",
-      "Read(D:\\project\\distributor\\wsp\\qualcy_jwt\\**)"
+      "Read(D:\\project\\distributor\\wsp\\qualcy_jwt\\**)",
+      "Bash(git restore *)",
+      "Bash(ls ~/.claude/skills 2>/dev/null || echo \"no user skills dir\")",
+      "Bash(./mvnw -q test -Dtest=DayEndApprovalServiceTest)",
+      "Bash(./mvnw test *)",
+      "Bash(which psql *)",
+      "Bash(export PGPASSWORD='Sachi@2010')",
+      "Bash(psql -h 52.66.119.34 -U postgres -d distr_v01 -t -c \"SELECT dire_id, delivery_boy_id, status, sequence FROM delivery_assignments WHERE status = 9 LIMIT 10;\")",
+      "Bash(psql -h 52.66.119.34 -U postgres -d distr_v01 -t -c ' *)",
+      "Bash(psql -h 52.66.119.34 -U postgres -d distr_v01 -t -c \"SELECT dire_id, lat, lon, address FROM delivery_assignments WHERE status = 9;\")"
     ]
   }
 }

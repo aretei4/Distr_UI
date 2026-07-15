@@ -6,7 +6,6 @@ import {
 import { fetchMapPoints, MapPoint } from "../services/MapService";
 import { ApiEndpoints } from "../constants/config";
 import { authHeaders } from "../services/authService";
-import CalendarInput from "../components/CalendarInput";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string;
 
@@ -84,11 +83,6 @@ const bbsrCenter        = { lat: 20.301, lng: 85.824 };
 const BRAND             = "#7f35b2";
 const BRAND_LIGHT       = "#f3e8ff";
 
-const todayDMY = () => {
-  const d = new Date();
-  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
-};
-
 // ── Label styles ──────────────────────────────────────────────────────────────
 
 const fieldLabel: React.CSSProperties = {
@@ -132,16 +126,12 @@ function StatPill({
 // ── Main component ────────────────────────────────────────────────────────────
 
 const SmartRoute: React.FC = () => {
-  const today = todayDMY();
-
   // Data
   const [points,    setPoints]    = useState<RoutePoint[]>([]);
   const [agents,    setAgents]    = useState<Agent[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
 
   // Filters
-  const [fromDate,    setFromDate]    = useState(today);
-  const [toDate,      setToDate]      = useState(today);
   const [minNetValue, setMinNetValue] = useState("");
   const [maxStops,    setMaxStops]    = useState("");
 
@@ -199,13 +189,14 @@ const SmartRoute: React.FC = () => {
   // ── Load map points ───────────────────────────────────────────────────────
 
   const loadPoints = useCallback(() => {
+    if (!selectedAgent) { setPoints([]); setRoute([]); setRouteComputed(false); return; }
     setLoading(true);
     setPoints([]);          // clear old map markers immediately
     setRoute([]);
     setRouteComputed(false);
     setAssignSuccess(false);
     setAssignError("");
-    fetchMapPoints(fromDate, toDate)
+    fetchMapPoints(selectedAgent.id)
       .then(data => {
         setPoints(data);
         if (data.length > 0 && mapRef.current) {
@@ -216,7 +207,7 @@ const SmartRoute: React.FC = () => {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [fromDate, toDate]);
+  }, [selectedAgent]);
 
   useEffect(() => { if (isLoaded) loadPoints(); }, [isLoaded, loadPoints]);
 
@@ -268,13 +259,8 @@ const SmartRoute: React.FC = () => {
     setAssignError("");
     try {
       const payload = route.map((p, i) => ({
-        picklist_no:     p.picklist_no,
-        sequence:        i + 1,
-        deliveryBoyId:   selectedAgent.id,
-        deliveryBoyName: selectedAgent.name,
-        address:         p.address ?? "",
-        lat:             p.lat,
-        lon:             p.lon,
+        direId:   Number(p.picklist_no),
+        sequence: i + 1,
       }));
       const res = await fetch(ApiEndpoints.SMART_ROUTE_ASSIGN, {
         method:  "POST",
@@ -320,8 +306,22 @@ const SmartRoute: React.FC = () => {
         borderRadius: "var(--radius-md)", border: "1px solid var(--ink-10)", flexShrink: 0,
       }}>
 
-        <CalendarInput label="From Date" value={fromDate} onChange={setFromDate} />
-        <CalendarInput label="To Date"   value={toDate}   onChange={setToDate} />
+        {/* Agent selector — loads that agent's ASSIGNED stops */}
+        <div style={{ display: "flex", flexDirection: "column", minWidth: 200 }}>
+          <label style={fieldLabel}>Delivery Agent</label>
+          <select
+            value={selectedAgent?.id ?? ""}
+            onChange={e => {
+              const ag = agents.find(a => a.id === Number(e.target.value)) ?? null;
+              setSelectedAgent(ag);
+              resetRoute();
+            }}
+            style={fieldInput}
+          >
+            <option value="">— Choose agent —</option>
+            {agents.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+          </select>
+        </div>
 
         {/* Warehouse selector */}
         <div style={{ display: "flex", flexDirection: "column", minWidth: 190 }}>
@@ -619,9 +619,13 @@ const SmartRoute: React.FC = () => {
                 boxShadow: "0 4px 24px rgba(0,0,0,0.1)",
               }}>
                 <div style={{ fontSize: 32, marginBottom: 10 }}>🗺️</div>
-                <div style={{ fontWeight: 700, color: "#111", marginBottom: 4 }}>No Picklists Found</div>
+                <div style={{ fontWeight: 700, color: "#111", marginBottom: 4 }}>
+                  {selectedAgent ? "No Assigned Deliveries" : "Choose an Agent"}
+                </div>
                 <div style={{ fontSize: 12.5, color: "#888" }}>
-                  Adjust the date range and click <strong>Load Points</strong>
+                  {selectedAgent
+                    ? "This agent has no assigned deliveries with customer coordinates"
+                    : "Select a delivery agent to load their assigned stops"}
                 </div>
               </div>
             </div>

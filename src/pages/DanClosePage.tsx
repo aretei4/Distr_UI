@@ -553,66 +553,34 @@ function Step1({ dans, onNext, onSaveClose }: { dans: Dan[]; onNext: (d: Dan) =>
           <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
             {dans.map(d => {
               const active = sel === d.dan;
-              const total  = d.picklists.reduce((a, p) => a + p.netValue, 0);
               return (
                 <div key={d.dan} onClick={() => setSel(d.dan)} style={{
                   border: `1.5px solid ${active ? "var(--brand)" : "var(--ink-10)"}`,
                   borderRadius: 12, padding: "14px 18px", cursor: "pointer",
                   background: active ? "var(--brand-xlight)" : "#fff",
                   transition: "all 0.15s",
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
                 }}>
-                  {/* Top row */}
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                      <div style={{
-                        width: 42, height: 42, borderRadius: "50%",
-                        background: active ? "var(--brand)" : "var(--brand-light)",
-                        color: active ? "#fff" : "var(--brand)",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 13, fontWeight: 800, flexShrink: 0,
-                      }}>{d.agent.name.slice(0, 2)}</div>
-                      <div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>
-                          {d.agent.name} <span style={{ color: "var(--ink-40)", fontWeight: 400, fontSize: 12 }}>ID {d.agent.code}</span>
-                        </div>
-                        <div style={{ fontSize: 12, color: "var(--brand)", fontWeight: 600, marginTop: 2 }}>{d.dan}</div>
-                      </div>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                      <div style={{ textAlign: "right" }}>
-                        <div style={{ fontSize: 11, color: "var(--ink-40)" }}>Date</div>
-                        <div style={{ fontSize: 13, fontWeight: 600 }}>{d.date}</div>
-                        <div style={{ fontSize: 11, color: "var(--ink-40)", marginTop: 2 }}>
-                          {d.picklists.length} orders · {fmt(total)}
-                        </div>
-                      </div>
-                      {active && <span style={{ fontSize: 20, color: "var(--brand)" }}>✓</span>}
+                  <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                    <div style={{
+                      width: 42, height: 42, borderRadius: "50%",
+                      background: active ? "var(--brand)" : "var(--brand-light)",
+                      color: active ? "#fff" : "var(--brand)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 13, fontWeight: 800, flexShrink: 0,
+                    }}>{d.agent.name.slice(0, 2)}</div>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>{d.agent.name}</div>
+                      <div style={{ fontSize: 12, color: "var(--brand)", fontWeight: 600, marginTop: 2 }}>{d.dan}</div>
                     </div>
                   </div>
-
-                  {/* Invoice number chips — shown for all cards */}
-                  {d.picklists.length > 0 && (
-                    <div style={{
-                      marginTop: 10, paddingTop: 10,
-                      borderTop: `1px solid ${active ? "var(--brand-light)" : "var(--ink-5)"}`,
-                      display: "flex", flexWrap: "wrap", gap: 6,
-                    }}>
-                      {d.picklists.map(p => (
-                        <span key={p.no} style={{
-                          display: "inline-flex", alignItems: "center", gap: 5,
-                          fontSize: 11, fontWeight: 600, padding: "3px 8px",
-                          borderRadius: 6, border: "1px solid",
-                          borderColor: active ? "var(--brand-light)" : "var(--ink-10)",
-                          background: active ? "#fff" : "var(--ink-5)",
-                          color: "var(--ink)",
-                          fontFamily: "monospace",
-                        }}>
-                          <span style={{ color: active ? "var(--brand)" : "var(--ink-40)", fontSize: 10 }}>#{p.no}</span>
-                          {p.invoiceNo || p.picklistNo}
-                        </span>
-                      ))}
+                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: 11, color: "var(--ink-40)" }}>Date</div>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>{d.date}</div>
                     </div>
-                  )}
+                    {active && <span style={{ fontSize: 20, color: "var(--brand)" }}>✓</span>}
+                  </div>
                 </div>
               );
             })}

@@ -14,6 +14,15 @@ const todayDMY = (): string => {
   return `${dd}/${mm}/${d.getFullYear()}`;
 };
 
+// Returns one week ago as dd/MM/yyyy
+const oneWeekAgoDMY = (): string => {
+  const d = new Date();
+  d.setDate(d.getDate() - 7);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  return `${dd}/${mm}/${d.getFullYear()}`;
+};
+
 // ── Payment mode colours (same palette as DayEnd) ────────────────────────────
 const MODE_STYLE: Record<string, { bg: string; color: string; border: string }> = {
   CASH:          { bg: "#d1fae5", color: "#065f46", border: "#6ee7b7" },
@@ -138,7 +147,7 @@ const DeliveryPage: React.FC = () => {
   const [deliveries, setDeliveries]     = useState<Delivery[]>([]);
   const [filtered, setFiltered]         = useState<Delivery[]>([]);
   const [loading, setLoading]           = useState(false);
-  const [fromDate, setFromDate]         = useState(searchParams.get("from") ?? today);
+  const [fromDate, setFromDate]         = useState(searchParams.get("from") ?? oneWeekAgoDMY());
   const [toDate, setToDate]             = useState(searchParams.get("to")   ?? today);
   const [agentSearch, setAgentSearch]   = useState("");
   const [deliveredFilter, setDelFilter] = useState(searchParams.get("delivered") ?? "ALL");
@@ -165,6 +174,8 @@ const DeliveryPage: React.FC = () => {
     if (deliveredFilter !== "ALL") {
       if (deliveredFilter === "YES") temp = temp.filter(d => d.status === "DELIVERED");
       else if (deliveredFilter === "NO") temp = temp.filter(d => d.status === "PENDING" || d.status === "FAILED");
+      else if (deliveredFilter === "ASSIGNED") temp = temp.filter(d => d.status === "ASSIGNED");
+      else if (deliveredFilter === "REJECTED") temp = temp.filter(d => d.status === "REJECTED");
     }
     setFiltered(temp);
   }, [agentSearch, deliveredFilter, deliveries]);
@@ -235,8 +246,10 @@ const DeliveryPage: React.FC = () => {
           </label>
           <Select value={deliveredFilter} onChange={setDelFilter}>
             <option value="ALL">All</option>
+            <option value="ASSIGNED">Assigned</option>
             <option value="YES">Delivered</option>
             <option value="NO">Pending</option>
+            <option value="REJECTED">Rejected</option>
           </Select>
         </div>
 
@@ -260,7 +273,7 @@ const DeliveryPage: React.FC = () => {
       </div>
 
       <DataTable
-        headers={["DIRE ID", "Invoice No", "Agent", "Status", "OTP", "Payment Modes", "Reason", "Date"]}
+        headers={["DIRE ID", "Invoice No", "Customer Name", "Net Value", "Agent", "Status", "OTP", "Payment Modes", "Reason", "Date"]}
         loading={loading}
         empty={!loading && filtered.length === 0}
         emptyText={fromDate && toDate ? "No records found for this range" : "Select a date range to load data"}
@@ -292,6 +305,16 @@ const DeliveryPage: React.FC = () => {
                   }}>{d.invoiceNo}</span>
                 : <span style={{ color: "var(--ink-30)", fontSize: 12 }}>—</span>
               }
+            </TD>
+
+            {/* Customer Name */}
+            <TD style={{ fontWeight: 500, color: "var(--ink)" }}>
+              {d.custDesc || "—"}
+            </TD>
+
+            {/* Net Value */}
+            <TD style={{ fontWeight: 700, textAlign: "right", whiteSpace: "nowrap" }}>
+              ₹{(d.netValue ?? 0).toLocaleString("en-IN")}
             </TD>
 
             <TD>

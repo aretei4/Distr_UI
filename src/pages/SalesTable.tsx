@@ -22,7 +22,7 @@ interface SalesEntry {
   companyName:  string;
 }
 
-const PAGE_SIZE = 15;
+const PAGE_SIZE = 30;
 
 const SalesTable: React.FC = () => {
   const [sales, setSales]           = useState<SalesEntry[]>([]);
@@ -43,15 +43,14 @@ const SalesTable: React.FC = () => {
 
   useEffect(() => {
     const q = search.trim().toLowerCase();
-    if (!q) { setFiltered(sales); }
-    else {
-      setFiltered(sales.filter(s =>
-        (s.picklistNo   ?? "").toLowerCase().includes(q) ||
-        (s.salesOrderNo ?? "").toLowerCase().includes(q) ||
-        (s.customerNo   ?? "").toLowerCase().includes(q) ||
-        (s.custDesc     ?? "").toLowerCase().includes(q)
-      ));
-    }
+    const rows = !q ? [...sales] : sales.filter(s =>
+      (s.picklistNo   ?? "").toLowerCase().includes(q) ||
+      (s.salesOrderNo ?? "").toLowerCase().includes(q) ||
+      (s.customerNo   ?? "").toLowerCase().includes(q) ||
+      (s.custDesc     ?? "").toLowerCase().includes(q)
+    );
+    rows.sort((a, b) => (a.salesOrderNo ?? "").localeCompare(b.salesOrderNo ?? "", undefined, { numeric: true }));
+    setFiltered(rows);
     setPage(1);
   }, [search, sales]);
 
@@ -93,7 +92,8 @@ const SalesTable: React.FC = () => {
     navigate("/sales/sales-detail", { state: { selectedSales: sel } });
   };
 
-  const totalValue = filteredSales.reduce((a, s) => a + (s.netValue ?? 0), 0);
+  const totalValue    = filteredSales.reduce((a, s) => a + (s.netValue ?? 0), 0);
+  const selectedValue = sales.reduce((a, s) => selected.includes(s.direId) ? a + (s.netValue ?? 0) : a, 0);
 
   return (
     <div className="animate-fade-up" style={{ height: "calc(100vh - 120px)", display: "flex", flexDirection: "column" }}>
@@ -101,7 +101,16 @@ const SalesTable: React.FC = () => {
         title="Sales Picklist"
         subtitle={`${filteredSales.length} records · ₹${totalValue.toLocaleString("en-IN")}`}
         action={
-          <div style={{ display: "flex", gap: 10 }}>
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            {selected.length > 0 && (
+              <span style={{
+                fontSize: 13, fontWeight: 700, color: "var(--brand)",
+                background: "var(--brand-light)", padding: "6px 14px",
+                borderRadius: 50, whiteSpace: "nowrap",
+              }}>
+                {selected.length} · ₹{selectedValue.toLocaleString("en-IN")}
+              </span>
+            )}
             {selected.length > 0 && (
               <Btn variant="danger" onClick={handleDelete}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>

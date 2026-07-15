@@ -12,6 +12,16 @@ export const fetchDeliveryData = async (
   return response.json();
 };
 
+export const fetchInvoiceReport = async (
+  apiFrom: string,
+  apiTo: string
+): Promise<Delivery[]> => {
+  const url = `${ApiEndpoints.INVOICE_REPORT}?fromDate=${apiFrom}&toDate=${apiTo}`;
+  const response = await fetch(url, { headers: { ...authHeaders() } });
+  if (!response.ok) throw new Error("Failed to fetch invoice report");
+  return response.json();
+};
+
 export const fetchDeliveryAgents = async () => {
   const response = await fetch(ApiEndpoints.DELIVERY_AGENTS, {
     headers: { ...authHeaders() },
