@@ -11,6 +11,7 @@ tail -f /home/ubuntu/app/app.log
 D:\work\project\qualyc\unix
 D:\project\distributor\wsp\qualcy_jwt
 D:\project\claude\device4autism
+D:\project\distributor\wsp\Quick_Connect
 # Check running
 lsof -i :8080
 
