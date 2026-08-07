@@ -19,8 +19,8 @@ interface PrivateRouteProps {
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, roles }) => {
   const user = authService.getUser();
 
-  // Not logged in → login page
-  if (!user) return <Navigate to="/" replace />;
+  // Not logged in → login page ("/" is the public landing page)
+  if (!user) return <Navigate to="/login" replace />;
 
   // Logged in but wrong role → back to dashboard
   if (roles && roles.length > 0 && !roles.includes(user.role)) {

@@ -1,5 +1,6 @@
 import type { DayEndRecord } from "../pages/types";
 import { ApiEndpoints } from "../constants/config";
+import { api } from "./apiClient";
 
 const DEMO_DATA: DayEndRecord[] = [
   { dayendId: 1, dayEndCode: "DE-2026-1504-001", deliveryId: 101, deliveryBoyName: "Ravi Kumar",   deliveryDate: "15-04-2026", status: "PENDING",  totalAmount: 4850.00, rejectReason: null,              requestDate: "2026-04-15 09:10:00", approvedAt: null },
@@ -12,29 +13,17 @@ const DEMO_DATA: DayEndRecord[] = [
 
 export const fetchDayEndSummary = async (): Promise<DayEndRecord[]> => {
   try {
-    const res = await fetch(ApiEndpoints.DAY_END_SUMMARY);
-    if (!res.ok) throw new Error("API error");
-    const json = await res.json();
-    return Array.isArray(json) ? json : (json.data ?? []);
+    const json = await api.get<any>(ApiEndpoints.DAY_END_SUMMARY);
+    return Array.isArray(json) ? json : (json?.data ?? []);
   } catch {
     return DEMO_DATA;
   }
 };
 
 export const approveDayEnd = async (dayendId: number): Promise<void> => {
-  const res = await fetch(ApiEndpoints.DAY_END_APPROVE, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ dayendId }),
-  });
-  if (!res.ok) throw new Error("Approve failed");
+  await api.post(ApiEndpoints.DAY_END_APPROVE, { dayendId });
 };
 
 export const rejectDayEnd = async (dayendId: number, rejectReason: string): Promise<void> => {
-  const res = await fetch(ApiEndpoints.DAY_END_REJECT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ dayendId, rejectReason }),
-  });
-  if (!res.ok) throw new Error("Reject failed");
+  await api.post(ApiEndpoints.DAY_END_REJECT, { dayendId, rejectReason });
 };

@@ -1,7 +1,9 @@
 import '../styles/pages/DanClosePage.css';
 import React, { useState, useCallback, useEffect } from "react";
-import { ApiEndpoints } from "../constants/config";
-import { authHeaders } from "../services/authService";
+import {
+  fetchDanList, fetchReturnsByDire, saveReturnsByDire,
+  fetchPicklistsByDayend, saveDanPayment, submitDan, updatePicklist,
+} from "../services/danService";
 import { PageHeader, Btn } from "../components/ui";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -277,20 +279,12 @@ function PaymentModal({
     setSaving(true); setError("");
     const paymentModeJson = p.delivered ? buildPaymentModeJson() : null;
     try {
-      const res = await fetch(ApiEndpoints.UPDATE_PICKLIST(picklist.direId), {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", ...authHeaders() },
-        body: JSON.stringify({
-          delivered:     p.delivered,
-          paymentAmount: p.delivered ? collected : 0,
-          paymentMode:   paymentModeJson,
-          reason:        p.reason.trim() || null,
-        }),
+      await updatePicklist(picklist.direId, {
+        delivered:     p.delivered,
+        paymentAmount: p.delivered ? collected : 0,
+        paymentMode:   paymentModeJson,
+        reason:        p.reason.trim() || null,
       });
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        throw new Error(body?.message ?? "Failed to save");
-      }
       onSave(p);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Save failed");
@@ -571,8 +565,7 @@ function Step1({ dans, onNext, onSaveClose }: { dans: Dan[]; onNext: (d: Dan) =>
                     }}>{d.agent.name.slice(0, 2)}</div>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>{d.agent.name}</div>
-                      <div style={{ fontSize: 12, color: "var(--brand)", fontWeight: 600, marginTop: 2 }}>{d.dan}</div>
-                    </div>
+                      <div style={{ fontSize: 12, color: "var(--brand)", fontWeight: 600, marginTop: 2 }}>{d.dan}</div>                    </div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                     <div style={{ textAlign: "right" }}>
@@ -617,9 +610,7 @@ function Step2({ dan, initialRows, payments, onNext, onBack, onSaveClose }: { da
     }
     Promise.all(
       picklistsWithDireId.map(p =>
-        fetch(ApiEndpoints.DAN_RETURNS(p.direId!), { headers: authHeaders() })
-          .then(r => r.ok ? r.json() : [])
-          .catch(() => [])
+        fetchReturnsByDire(p.direId!).catch(() => [])
       )
     ).then((allResults: Array<Array<{
         direId?: number; serial: string; description: string;
@@ -682,34 +673,37 @@ function Step2({ dan, initialRows, payments, onNext, onBack, onSaveClose }: { da
 
     if (byPicklist.length > 0) {
       try {
-        await Promise.all(byPicklist.map(x =>
-          fetch(ApiEndpoints.DAN_RETURNS(x.direId), {
-            method: "POST",
-            headers: { "Content-Type": "application/json", ...authHeaders() },
-            body: JSON.stringify(x.items),
-          })
-        ));
+        await Promise.all(byPicklist.map(x => saveReturnsByDire(x.direId, x.items)));
       } catch { /* proceed even if save fails */ }
     }
     onSaveClose();
   }, [rows, dan, onSaveClose]);
 
-  /* When return qty changes → auto-calc return amt by unit price */
-  const updateQty = (pno: number, idx: number, val: string) =>
-    setRows(r => {
-      const list      = r[pno] ?? [];
-      const row       = list[idx];
-      if (!row) return r;
-      const unitPrice = row.billQty > 0 ? row.billAmt / row.billQty : 0;
-      const qty       = parseFloat(val) || 0;
-      const autoAmt   = unitPrice > 0
-        ? (Math.round(unitPrice * qty * 100) / 100).toFixed(2)
-        : row.returnAmt;
-      return { ...r, [pno]: list.map((row, i) => i === idx ? { ...row, returnQty: val, returnAmt: autoAmt } : row) };
-    });
+  /* Return amt = unit price × return qty. Recomputed whenever any of the
+     three driving fields (bill qty, bill amt, return qty) changes. */
+  const recalcReturnAmt = (row: ReturnRow): string => {
+    const billQty = Number(row.billQty) || 0;
+    const billAmt = Number(row.billAmt) || 0;
+    if (billQty <= 0 || billAmt <= 0) return row.returnAmt;
+    const unitPrice = billAmt / billQty;
+    const qty       = parseFloat(row.returnQty) || 0;
+    return (Math.round(unitPrice * qty * 100) / 100).toFixed(2);
+  };
+
+  /* Fields that feed the return amount — editing any of them re-derives it */
+  const DRIVING_FIELDS: Array<keyof ReturnRow> = ["billQty", "billAmt", "returnQty"];
 
   const updateField = (pno: number, idx: number, key: keyof ReturnRow, val: string) =>
-    setRows(r => ({ ...r, [pno]: (r[pno] ?? []).map((row, i) => i === idx ? { ...row, [key]: val } : row) }));
+    setRows(r => ({
+      ...r,
+      [pno]: (r[pno] ?? []).map((row, i) => {
+        if (i !== idx) return row;
+        const next = { ...row, [key]: val } as ReturnRow;
+        return DRIVING_FIELDS.includes(key)
+          ? { ...next, returnAmt: recalcReturnAmt(next) }
+          : next;
+      }),
+    }));
 
   const toggleSel = (pno: number, idx: number) =>
     setRows(r => ({ ...r, [pno]: (r[pno] ?? []).map((row, i) => i === idx ? { ...row, selected: !row.selected } : row) }));
@@ -885,7 +879,7 @@ function Step2({ dan, initialRows, payments, onNext, onBack, onSaveClose }: { da
                     <td style={{ padding: "8px 10px", textAlign: "right" }}>
                       <input type="number" min="0"
                         value={row.returnQty}
-                        onChange={e => updateQty(p.no, idx, e.target.value)}
+                        onChange={e => updateField(p.no, idx, "returnQty", e.target.value)}
                         onFocus={e => (e.currentTarget.style.borderColor = "var(--brand)")}
                         onBlur={e => (e.currentTarget.style.borderColor = "var(--ink-10)")}
                         style={{ ...inp, width: 72, textAlign: "right" }}
@@ -969,8 +963,7 @@ function Step3({ dan, returns, initialPayments, onNext, onBack, onSaveClose }: {
   /* Always fetch fresh payment data from delivery_status via dayend API */
   useEffect(() => {
     setLoading(true);
-    fetch(ApiEndpoints.PICKLISTS_BY_AGENT(dan._danId!), { headers: authHeaders() })
-      .then(r => r.ok ? r.json() : null)
+    fetchPicklistsByDayend(dan._danId!)
       .then((data: Array<{
         direId?: number; picklistNo?: string; delivered: boolean;
         paymentMode: string | null; reason: string | null;
@@ -1510,12 +1503,7 @@ function Step5({ dan, returns, payments, onReset, onBack, onSaveClose }: { dan: 
           })),
         }))
         .filter(x => x.items.length > 0);
-      await Promise.all(returnsByPicklist.map(x =>
-        fetch(ApiEndpoints.DAN_RETURNS(x.direId), {
-          method: "POST", headers: { "Content-Type": "application/json", ...authHeaders() },
-          body: JSON.stringify(x.items),
-        })
-      ));
+      await Promise.all(returnsByPicklist.map(x => saveReturnsByDire(x.direId, x.items)));
       // 2. Save payments
       for (const p of dan.picklists) {
         const py = payments[p.no];
@@ -1527,13 +1515,15 @@ function Step5({ dan, returns, payments, onReset, onBack, onSaveClose }: { dan: 
           if (m === "UPI" || m === "NEFT" || m === "CREDIT") { if (d.referenceNo) obj.referenceNo = d.referenceNo; }
           return obj;
         });
-        await fetch(ApiEndpoints.DAN_PAYMENT(danId, p.direId), {
-          method: "POST", headers: { "Content-Type": "application/json", ...authHeaders() },
-          body: JSON.stringify({ delivered: py.delivered, paymentAmount: modeTotal(py, false), paymentMode: JSON.stringify(entries), reason: py.reason || null }),
+        await saveDanPayment(danId, p.direId, {
+          delivered: py.delivered,
+          paymentAmount: modeTotal(py, false),
+          paymentMode: JSON.stringify(entries),
+          reason: py.reason || null,
         });
       }
       // 3. Submit DAN
-      await fetch(ApiEndpoints.DAN_SUBMIT(danId), { method: "POST", headers: authHeaders() });
+      await submitDan(danId);
       setSubmitted(true);
     } catch { setSubmitted(true); }
     setSubmitting(false);
@@ -1806,8 +1796,7 @@ const DanClosePage: React.FC = () => {
   const [payments, setPayments] = useState<PaymentState>({});
 
   const loadDans = useCallback(() => {
-    fetch(ApiEndpoints.DAN_LIST, { headers: authHeaders() })
-      .then(r => r.ok ? r.json() : null)
+    fetchDanList()
       .then((data: Array<{
         danId: number; danCode: string; date: string;
         agentId: string; agentName: string; agentCode: string;

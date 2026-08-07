@@ -1,5 +1,5 @@
 import { getApiBaseUrl } from "../constants/config";
-import { authHeaders } from "./authService";
+import { api } from "./apiClient";
 
 export type UserRole = "ADMIN" | "MANAGER" | "STAFF";
 
@@ -8,6 +8,7 @@ export interface UserRecord {
   username: string;
   fullName: string | null;
   email: string | null;
+  phone: string | null;
   role: UserRole;
   enabled: boolean;
   createdAt: string;
@@ -19,12 +20,14 @@ export interface CreateUserPayload {
   password: string;
   fullName: string;
   email: string;
+  phone: string;
   role: UserRole;
 }
 
 export interface UpdateUserPayload {
   fullName?: string;
   email?: string;
+  phone?: string;
   role?: UserRole;
   enabled?: boolean;
   password?: string;
@@ -34,45 +37,18 @@ const BASE = () => `${getApiBaseUrl()}/users`;
 
 export const userService = {
   async getAll(): Promise<UserRecord[]> {
-    const res = await fetch(BASE(), {
-      headers: { "Content-Type": "application/json", ...authHeaders() },
-    });
-    if (!res.ok) throw new Error("Failed to load users");
-    return res.json();
+    return api.get<UserRecord[]>(BASE());
   },
 
   async create(payload: CreateUserPayload): Promise<UserRecord> {
-    const res = await fetch(BASE(), {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeaders() },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => null);
-      throw new Error(err?.error ?? err?.detail ?? err?.message ?? "Failed to create user");
-    }
-    // Safe parse — treat any 2xx as success even if the body is empty or unparseable
-    return res.json().catch(() => ({} as UserRecord));
+    return (await api.post<UserRecord>(BASE(), payload)) ?? ({} as UserRecord);
   },
 
   async update(id: number, payload: UpdateUserPayload): Promise<UserRecord> {
-    const res = await fetch(`${BASE()}/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", ...authHeaders() },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => null);
-      throw new Error(err?.error ?? err?.detail ?? err?.message ?? "Failed to update user");
-    }
-    return res.json().catch(() => ({} as UserRecord));
+    return (await api.put<UserRecord>(`${BASE()}/${id}`, payload)) ?? ({} as UserRecord);
   },
 
   async remove(id: number): Promise<void> {
-    const res = await fetch(`${BASE()}/${id}`, {
-      method: "DELETE",
-      headers: { ...authHeaders() },
-    });
-    if (!res.ok) throw new Error("Failed to delete user");
+    await api.del(`${BASE()}/${id}`);
   },
 };

@@ -1,31 +1,29 @@
 import { Delivery } from "../models/DeliveryModel";
 import { ApiEndpoints } from "../constants/config";
-import { authHeaders } from "./authService";
+import { api } from "./apiClient";
 
 export const fetchDeliveryData = async (
   apiFrom: string,
   apiTo: string
 ): Promise<Delivery[]> => {
-  const url = `${ApiEndpoints.DELIVERY_STATUS_LIST}?fromDate=${apiFrom}&toDate=${apiTo}`;
-  const response = await fetch(url, { headers: { ...authHeaders() } });
-  if (!response.ok) throw new Error("Failed to fetch delivery data");
-  return response.json();
+  return api.get<Delivery[]>(`${ApiEndpoints.DELIVERY_STATUS_LIST}?fromDate=${apiFrom}&toDate=${apiTo}`);
 };
 
 export const fetchInvoiceReport = async (
   apiFrom: string,
-  apiTo: string
+  apiTo: string,
+  paymentMode?: string
 ): Promise<Delivery[]> => {
-  const url = `${ApiEndpoints.INVOICE_REPORT}?fromDate=${apiFrom}&toDate=${apiTo}`;
-  const response = await fetch(url, { headers: { ...authHeaders() } });
-  if (!response.ok) throw new Error("Failed to fetch invoice report");
-  return response.json();
+  let url = `${ApiEndpoints.INVOICE_REPORT}?fromDate=${apiFrom}&toDate=${apiTo}`;
+  if (paymentMode && paymentMode !== "ALL") url += `&paymentMode=${paymentMode}`;
+  return api.get<Delivery[]>(url);
 };
 
 export const fetchDeliveryAgents = async () => {
-  const response = await fetch(ApiEndpoints.DELIVERY_AGENTS, {
-    headers: { ...authHeaders() },
-  });
-  if (!response.ok) throw new Error("Failed to fetch delivery agents");
-  return response.json();
+  return api.get<any[]>(ApiEndpoints.DELIVERY_AGENTS);
+};
+
+/** Deviation tracker rows (violation page). */
+export const fetchViolationRows = async (fromDate: string, toDate: string): Promise<any[]> => {
+  return api.get<any[]>(`${ApiEndpoints.VIOLATION_ROWS}?fromDate=${fromDate}&toDate=${toDate}`);
 };

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DataTable, TR, TD, SearchInput, PageHeader } from "../components/ui";
+import { api } from "../services/apiClient";
 
 interface SalesEntry {
   picklistNo: string; salesOrderNo: string; customerNo: string;
@@ -15,8 +16,7 @@ const Home: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("https://device4autism.in/api/sales?Picklist_No=E587P22657")
-      .then(r => r.json())
+    api.get<SalesEntry[]>("https://device4autism.in/api/sales?Picklist_No=E587P22657")
       .then(data => { setSales(data); setFiltered(data); })
       .catch(() => {});
   }, []);

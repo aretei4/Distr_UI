@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../services/authService";
 import { ApiEndpoints, setCompanyBaseUrl, setCompanyInfo } from "../constants/config";
+import { api } from "../services/apiClient";
 
 /* ── Company search result ────────────────────────────────────────────────── */
 interface Company {
@@ -99,12 +100,9 @@ const Login: React.FC = () => {
     debounceRef.current = setTimeout(async () => {
       setCompanyLoading(true);
       try {
-        const res = await fetch(ApiEndpoints.COMPANY_SEARCH(q.trim()));
-        if (res.ok) {
-          const data: Company[] = await res.json();
-          setCompanyResults(data);
-          setDropdownOpen(true);
-        }
+        const data: Company[] = await api.get<Company[]>(ApiEndpoints.COMPANY_SEARCH(q.trim()));
+        setCompanyResults(data);
+        setDropdownOpen(true);
       } catch {
         setCompanyResults([]);
       } finally {

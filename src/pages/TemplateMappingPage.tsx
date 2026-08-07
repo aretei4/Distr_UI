@@ -1,8 +1,7 @@
 import '../styles/pages/TemplateMappingPage.css';
 import React, { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
-import { saveTemplate } from "../services/template.service";
-import { ApiEndpoints } from "../constants/config";
+import { saveTemplate, fetchTemplateCompanies, fetchTemplatesByCompany } from "../services/template.service";
 import { PageHeader, Card, Btn, Field, Select, TextInput } from "../components/ui";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -133,17 +132,15 @@ const TemplateMappingPage: React.FC = () => {
 
   // Load company list on mount
   useEffect(() => {
-    fetch(ApiEndpoints.TEMPLATE_COMPANIES)
-      .then(r => r.ok ? r.json() : [])
-      .then((data: string[]) => setCompanies(data))
+    fetchTemplateCompanies()
+      .then((data: string[]) => setCompanies(data ?? []))
       .catch(() => {});
   }, []);
 
   // When company + type combo changes, try to pre-load existing mappings
   useEffect(() => {
     if (!companyName || !templateType) return;
-    fetch(ApiEndpoints.TEMPLATES_BY_COMPANY(companyName))
-      .then(r => r.ok ? r.json() : [])
+    fetchTemplatesByCompany(companyName)
       .then((list: { templateType: string; mappings: Record<string, string> }[]) => {
         const existing = list.find(t => t.templateType === templateType);
         if (existing?.mappings) {

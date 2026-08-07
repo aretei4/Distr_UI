@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { ApiEndpoints } from "../constants/config";
+import { fetchAssignments, deleteDeliveryByDire } from "../services/salesService";
 import { PageHeader, DataTable, TR, TD, SearchInput, Btn, Select } from "../components/ui";
 
 interface Assignment {
@@ -51,9 +51,7 @@ const AssignmentPage: React.FC = () => {
 
   const load = useCallback(() => {
     setLoading(true);
-    const qs = statusFilter !== "all" ? `?status=${statusFilter}` : "";
-    fetch(`${ApiEndpoints.ASSIGNMENTS}${qs}`)
-      .then(r => r.json())
+    fetchAssignments(statusFilter)
       .then(rows => { setData(rows); setFiltered(rows); })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -74,8 +72,7 @@ const AssignmentPage: React.FC = () => {
   const deleteRow = async (direId: number) => {
     if (!confirm("Delete this assignment?")) return;
     try {
-      const res = await fetch(ApiEndpoints.DELETE_DELIVERY_BY_DIRE(direId), { method: "DELETE" });
-      if (!res.ok) throw new Error();
+      await deleteDeliveryByDire(direId);
       const next = data.filter(r => r.direId !== direId);
       setData(next); setFiltered(next);
     } catch { alert("Delete failed"); }

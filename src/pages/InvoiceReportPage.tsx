@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { fetchInvoiceReport } from "../services/DeliveryService";
 import CalendarInput from "../components/CalendarInput";
 import { Delivery } from "../models/DeliveryModel";
-import { PageHeader, DataTable, TR, TD } from "../components/ui";
+import { PageHeader, DataTable, TR, TD, Select } from "../components/ui";
 
 // dd/MM/yyyy helpers
 const todayDMY = (): string => {
@@ -34,15 +34,16 @@ const InvoiceReportPage: React.FC = () => {
   const [fromDate, setFromDate] = useState(oneWeekAgoDMY());
   const [toDate, setToDate]     = useState(todayDMY());
   const [agentSearch, setAgentSearch] = useState("");
+  const [modeFilter, setModeFilter]   = useState("ALL");
 
   useEffect(() => {
     if (!fromDate || !toDate) return;
     setLoading(true);
-    fetchInvoiceReport(fromDate, toDate)
+    fetchInvoiceReport(fromDate, toDate, modeFilter)
       .then(setRows)
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [fromDate, toDate]);
+  }, [fromDate, toDate, modeFilter]);
 
   useEffect(() => {
     const q = agentSearch.trim().toLowerCase();
@@ -68,6 +69,20 @@ const InvoiceReportPage: React.FC = () => {
       <div style={{ display: "flex", gap: 16, marginBottom: 20, flexWrap: "wrap", alignItems: "flex-end" }}>
         <CalendarInput label="From Date" value={fromDate} onChange={setFromDate} />
         <CalendarInput label="To Date"   value={toDate}   onChange={setToDate} />
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <label style={{ fontSize: 11.5, fontWeight: 700, color: "var(--ink-60)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            Payment Mode
+          </label>
+          <Select value={modeFilter} onChange={setModeFilter}>
+            <option value="ALL">All modes</option>
+            <option value="CASH">Cash</option>
+            <option value="UPI">UPI</option>
+            <option value="CHEQUE">Cheque</option>
+            <option value="NEFT">NEFT</option>
+            <option value="CREDIT">Credit</option>
+          </Select>
+        </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <label style={{ fontSize: 11.5, fontWeight: 700, color: "var(--ink-60)", textTransform: "uppercase", letterSpacing: "0.06em" }}>

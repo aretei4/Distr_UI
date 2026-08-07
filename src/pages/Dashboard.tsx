@@ -1,33 +1,13 @@
 import '../styles/pages/Dashboard.css';
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { PageHeader, Card, SearchInput } from "../components/ui";
+import { PageHeader, SearchInput } from "../components/ui";
 import {
-  getDeliverySummary, getOverallSummary, fetchDeliveryAgents,
-  DeliverySummary, OverallSummary, DeliveryBoy,
+  getDeliverySummary, getOverallSummary, getOverallReport, fetchDeliveryAgents,
+  DeliverySummary, OverallSummary, OverallReport, DeliveryBoy,
 } from "../services/dashboardService";
-import { ApiEndpoints } from "../constants/config";
-import { authHeaders } from "../services/authService";
-
-interface OnlineAgent {
-  deliveryId:      number;
-  deliveryBoyName: string;
-  status:          "STARTED" | "PENDING";
-  startTime:       string | null;
-  totalDeliveries: number;
-  deliveredCount:  number;
-  totalAmount:     number;
-}
 
 const TEN_MINUTES = 10 * 60 * 1000;
-const TWO_MINUTES  =  2 * 60 * 1000;
-
-const DEMO_ONLINE: OnlineAgent[] = [
-  { deliveryId: 50, deliveryBoyName: "DA1", status: "STARTED", startTime: "23-05-2026 09:15:00", totalDeliveries: 5,  deliveredCount: 3, totalAmount: 12500 },
-  { deliveryId: 51, deliveryBoyName: "DA2", status: "PENDING", startTime: "23-05-2026 08:40:00", totalDeliveries: 8,  deliveredCount: 8, totalAmount: 34062 },
-  { deliveryId: 74, deliveryBoyName: "DA3", status: "STARTED", startTime: "23-05-2026 10:05:00", totalDeliveries: 6,  deliveredCount: 2, totalAmount:  8400 },
-  { deliveryId: 55, deliveryBoyName: "DA4", status: "STARTED", startTime: "23-05-2026 09:30:00", totalDeliveries: 7,  deliveredCount: 5, totalAmount: 21000 },
-];
 
 const DEMO: DeliverySummary = {
   todayTotal: 6,    todayDelivered: 4,   todayPending: 0,  todayCancelled: 2,
@@ -110,19 +90,14 @@ const Dashboard: React.FC = () => {
   const [tab, setTab]               = useState<"today" | "overall">("today");
   const [summary, setSummary]       = useState<DeliverySummary | null>(null);
   const [overall, setOverall]       = useState<OverallSummary | null>(null);
+  const [report,  setReport]        = useState<OverallReport | null>(null);
+  const [repMonth, setRepMonth]     = useState(new Date().getMonth() + 1);
+  const [repYear]                   = useState(new Date().getFullYear());
   const [deliveryBoys, setDeliveryBoys] = useState<DeliveryBoy[]>([]);
   const [selectedBoy, setSelectedBoy]  = useState<DeliveryBoy | null>(null);
   const [search, setSearch]            = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
-  const [onlineAgents, setOnlineAgents] = useState<OnlineAgent[]>(DEMO_ONLINE);
   const navigate = useNavigate();
-
-  const loadOnlineAgents = useCallback(async () => {
-    try {
-      const res = await fetch(ApiEndpoints.ONLINE_AGENTS, { headers: authHeaders() });
-      if (res.ok) setOnlineAgents(await res.json());
-    } catch { /* keep demo */ }
-  }, []);
 
   const loadSummary = useCallback(async () => {
     try {
@@ -146,15 +121,14 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => { loadDeliveryBoys(); }, []);
   useEffect(() => {
+    if (tab !== "overall") return;
+    getOverallReport(repMonth, repYear).then(setReport).catch(() => {});
+  }, [tab, repMonth, repYear]);
+  useEffect(() => {
     loadSummary();
     const iv = setInterval(loadSummary, TEN_MINUTES);
     return () => clearInterval(iv);
   }, [loadSummary]);
-  useEffect(() => {
-    loadOnlineAgents();
-    const iv = setInterval(loadOnlineAgents, TWO_MINUTES);
-    return () => clearInterval(iv);
-  }, [loadOnlineAgents]);
 
   const s = summary ?? DEMO;
   const o = overall ?? DEMO_OVERALL;
@@ -256,159 +230,234 @@ const Dashboard: React.FC = () => {
         ))}
       </div>
 
-      {/* ── Stat cards ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14, marginBottom: 16 }}>
-        {cards.map(c => (
-          <MiniCard
-            key={c.label}
-            label={c.label}
-            count={c.count}
-            amount={c.amount}
-            color={c.color}
-            bg={c.bg}
-            onClick={() => {
-              if ("to" in c && c.to) { navigate(c.to); return; }
-              isToday
-                ? navigate(`/delivery?delivered=${c.filter}&from=${todayStr}&to=${todayStr}`)
-                : navigate(`/delivery?delivered=${c.filter}`);
-            }}
-          />
-        ))}
-      </div>
-
-      {/* ── Net value + Collected ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 28 }}>
-        <WideCard label={isToday ? "TODAY NET VALUE" : "TOTAL NET VALUE"} value={netValue}  sub={netLabel}  color="#1e40af" bg="#dbeafe" icon={<NetValueIcon />} />
-        <WideCard label={isToday ? "TODAY COLLECTED" : "TOTAL COLLECTED"} value={collected} sub={colLabel}  color="#065f46" bg="#d1fae5" icon={<CollectedIcon />} />
-      </div>
-
-      {/* ── Online Agents table ── */}
-      <Card>
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-            Online Agents
-          </span>
-          <span style={{ position: "relative", display: "inline-flex", alignItems: "center", width: 8, height: 8 }}>
-            <span style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "#10b981", opacity: 0.5, animation: "ping 1.5s cubic-bezier(0,0,0.2,1) infinite" }} />
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981" }} />
-          </span>
-          <span style={{ fontSize: 12, color: "#10b981", fontWeight: 700 }}>
-            {onlineAgents.length} active today
-          </span>
-        </div>
-
-        {onlineAgents.length === 0 ? (
-          <p style={{ fontSize: 13, color: "var(--ink-40)", textAlign: "center", padding: "20px 0" }}>No agents online right now</p>
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid var(--ink-10)" }}>
-                  {["AGENT","ID","SINCE", ...(isToday ? ["STATUS"] : []), "DELIVERED","PROGRESS","COLLECTED"].map(h => (
-                    <th key={h} style={{
-                      padding: "8px 12px", textAlign: "left",
-                      fontSize: 10.5, fontWeight: 700, color: "var(--ink-40)",
-                      textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap",
-                    }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {onlineAgents.map((agent, i) => {
-                  const isStarted = agent.status === "STARTED";
-                  const pct       = agent.totalDeliveries > 0
-                    ? Math.round((agent.deliveredCount / agent.totalDeliveries) * 100) : 0;
-                  const initials  = (agent.deliveryBoyName ?? "DA").slice(0, 2).toUpperCase();
-                  const timeLabel = agent.startTime?.split(" ")[1]?.slice(0, 5) ?? "—";
-                  const rowBg     = i % 2 === 0 ? "#fff" : "transparent";
-
-                  return (
-                    <tr key={agent.deliveryId} style={{ background: rowBg, borderBottom: "1px solid var(--ink-5)" }}>
-
-                      {/* AGENT */}
-                      <td style={{ padding: "12px 12px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                          <div style={{ position: "relative", flexShrink: 0 }}>
-                            <div style={{
-                              width: 34, height: 34, borderRadius: "50%",
-                              background: isStarted ? "#d1fae5" : "var(--brand-light)",
-                              color: isStarted ? "#065f46" : "var(--brand)",
-                              display: "flex", alignItems: "center", justifyContent: "center",
-                              fontSize: 12, fontWeight: 800,
-                            }}>{initials}</div>
-                            <span style={{
-                              position: "absolute", bottom: 1, right: 1,
-                              width: 8, height: 8, borderRadius: "50%",
-                              background: isStarted ? "#10b981" : "#7c3aed",
-                              border: "2px solid #fff",
-                            }} />
-                          </div>
-                          <span style={{ fontWeight: 600, color: "var(--ink)" }}>{agent.deliveryBoyName}</span>
-                        </div>
-                      </td>
-
-                      {/* ID */}
-                      <td style={{ padding: "12px 12px", color: "var(--ink-60)", fontWeight: 600 }}>
-                        #{agent.deliveryId}
-                      </td>
-
-                      {/* SINCE */}
-                      <td style={{ padding: "12px 12px", color: "var(--ink-60)", fontFamily: "monospace", fontSize: 12.5 }}>
-                        {timeLabel}
-                      </td>
-
-                      {/* STATUS — today only */}
-                      {isToday && (
-                        <td style={{ padding: "12px 12px" }}>
-                          <span style={{
-                            display: "inline-block", padding: "4px 12px", borderRadius: 50,
-                            fontSize: 11.5, fontWeight: 700,
-                            background: isStarted ? "#d1fae5" : "var(--brand-xlight)",
-                            color: isStarted ? "#065f46" : "var(--brand)",
-                            border: `1px solid ${isStarted ? "#6ee7b7" : "var(--brand)"}`,
-                          }}>
-                            {isStarted ? "Active" : "Submitting"}
-                          </span>
-                        </td>
-                      )}
-
-                      {/* DELIVERED */}
-                      <td style={{ padding: "12px 12px", fontWeight: 600, color: "var(--ink)" }}>
-                        {agent.deliveredCount}/{agent.totalDeliveries}
-                      </td>
-
-                      {/* PROGRESS */}
-                      <td style={{ padding: "12px 12px", minWidth: 140 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <div style={{ flex: 1, height: 6, background: "#f1f5f9", borderRadius: 50, overflow: "hidden" }}>
-                            <div style={{
-                              height: "100%", width: `${pct}%`,
-                              background: isStarted ? "#10b981" : "var(--brand)",
-                              borderRadius: 50,
-                            }} />
-                          </div>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-60)", minWidth: 34 }}>{pct}%</span>
-                        </div>
-                      </td>
-
-                      {/* COLLECTED */}
-                      <td style={{ padding: "12px 12px", fontWeight: 700, color: "var(--ink)", textAlign: "right", whiteSpace: "nowrap" }}>
-                        {agent.totalAmount > 0 ? fmt(agent.totalAmount) : <span style={{ color: "var(--ink-30)" }}>—</span>}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+      {/* ── TODAY: stat cards + wide cards ── */}
+      {isToday && (
+        <>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14, marginBottom: 16 }}>
+            {cards.map(c => (
+              <MiniCard
+                key={c.label}
+                label={c.label}
+                count={c.count}
+                amount={c.amount}
+                color={c.color}
+                bg={c.bg}
+                onClick={() => {
+                  if ("to" in c && c.to) { navigate(c.to); return; }
+                  navigate(`/delivery?delivered=${c.filter}&from=${todayStr}&to=${todayStr}`);
+                }}
+              />
+            ))}
           </div>
-        )}
-      </Card>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 28 }}>
+            <WideCard label="TODAY NET VALUE" value={netValue}  sub={netLabel} color="#1e40af" bg="#dbeafe" icon={<NetValueIcon />} />
+            <WideCard label="TODAY COLLECTED" value={collected} sub={colLabel} color="#065f46" bg="#d1fae5" icon={<CollectedIcon />} />
+          </div>
+        </>
+      )}
+
+      {/* ── OVERALL: monthly report from payment_details ── */}
+      {!isToday && (
+        <OverallReportView
+          report={report}
+          month={repMonth}
+          onMonthChange={setRepMonth}
+          onCreditClick={() => navigate("/invoice-report")}
+        />
+      )}
+
     </div>
   );
 };
 
 /* ── Icons ───────────────────────────────────────────────────────────────── */
+/* ── Overall monthly report view ─────────────────────────────────────────── */
+
+const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+// CVD-validated categorical palette (checked with dataviz validator)
+const MODE_COLORS: { key: keyof OverallReport; label: string; color: string }[] = [
+  { key: "cashAmount",   label: "Cash",   color: "#2563eb" },
+  { key: "upiAmount",    label: "UPI",    color: "#15803d" },
+  { key: "chequeAmount", label: "Cheque", color: "#db2777" },
+  { key: "neftAmount",   label: "NEFT",   color: "#d97706" },
+  { key: "creditAmount", label: "Credit", color: "#64748b" },
+];
+
+function StatTile({ label, value, sub, sub2, danger, onClick }: {
+  label: string; value: string; sub?: string; sub2?: string; danger?: boolean; onClick?: () => void;
+}) {
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        background: danger ? "#fee2e2" : "#fff",
+        border: `1px solid ${danger ? "#fca5a5" : "var(--ink-10)"}`,
+        borderRadius: 12, padding: "16px 18px",
+        cursor: onClick ? "pointer" : "default",
+      }}
+    >
+      <div style={{ fontSize: 12, color: danger ? "#991b1b" : "var(--ink-40)", marginBottom: 8, fontWeight: 600 }}>
+        {danger ? "⚠ " : ""}{label}
+      </div>
+      <div style={{ fontSize: 22, fontWeight: 800, color: danger ? "#b91c1c" : "var(--ink)", lineHeight: 1 }}>{value}</div>
+      {sub  && <div style={{ fontSize: 12, color: danger ? "#991b1b" : "var(--ink-60)", marginTop: 6 }}>{sub}</div>}
+      {sub2 && <div style={{ fontSize: 11.5, color: danger ? "#991b1b" : "var(--ink-40)", marginTop: 2 }}>{sub2}</div>}
+    </div>
+  );
+}
+
+function OverallReportView({ report, month, onMonthChange, onCreditClick }: {
+  report: OverallReport | null;
+  month: number;
+  onMonthChange: (m: number) => void;
+  onCreditClick: () => void;
+}) {
+  const r = report;
+  const modes = MODE_COLORS
+    .map(m => ({ ...m, amount: (r?.[m.key] as number) ?? 0 }))
+    .filter(m => m.amount > 0);
+  const modeTotal = modes.reduce((s, m) => s + m.amount, 0);
+  const maxCredit = Math.max(1, ...(r?.topCreditStores ?? []).map(s => s.amount));
+
+  // Donut geometry: r=60, thin ring, 2px surface gaps between segments
+  const R = 60, C = 2 * Math.PI * R;
+  let acc = 0;
+  const segments = modes.map(m => {
+    const frac = modeTotal > 0 ? m.amount / modeTotal : 0;
+    const seg = { ...m, offset: acc * C, len: Math.max(0, frac * C - 3) };
+    acc += frac;
+    return seg;
+  });
+
+  return (
+    <div>
+      {/* Month filter */}
+      <div style={{ display: "flex", gap: 12, alignItems: "flex-end", marginBottom: 16 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 180 }}>
+          <label style={{ fontSize: 11, fontWeight: 700, color: "var(--ink-60)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Month</label>
+          <select
+            value={month}
+            onChange={e => onMonthChange(Number(e.target.value))}
+            style={{
+              padding: "9px 12px", border: "1.5px solid var(--ink-10)", borderRadius: 8,
+              fontSize: 13, fontFamily: "'Inter',sans-serif", background: "#fff", outline: "none",
+            }}
+          >
+            {MONTH_NAMES.map((mn, i) => <option key={i} value={i + 1}>{mn}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {/* Stat tiles — each opens the Invoice Report */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 20 }}>
+        <StatTile label="Total orders"      value={String(r?.totalOrders ?? 0)}   sub="Closed"           onClick={onCreditClick} />
+        <StatTile label="Total net value"   value={fmt(r?.totalNetValue ?? 0)}    sub="Invoice value"    onClick={onCreditClick} />
+        <StatTile label="Total collected"   value={fmt(r?.totalCollected ?? 0)}   sub="Payment received" onClick={onCreditClick} />
+        <StatTile
+          label="Outstanding credit"
+          value={fmt(r?.outstandingCredit ?? 0)}
+          sub="Net − collected"
+          sub2={`${r?.pendingStores ?? 0} stores pending`}
+          danger
+          onClick={onCreditClick}
+        />
+      </div>
+
+      {/* Charts row — cards open the Invoice Report */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 28 }}>
+
+        {/* Payment mode breakdown — donut */}
+        <div
+          onClick={onCreditClick}
+          style={{ background: "#fff", border: "1px solid var(--ink-10)", borderRadius: 12, padding: "16px 20px", cursor: "pointer" }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+            <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--ink)" }}>Payment mode breakdown</span>
+            <span style={{ fontSize: 12, color: "var(--ink-40)" }}>{MONTH_NAMES[month - 1]}</span>
+          </div>
+
+          {modes.length === 0 ? (
+            <div style={{ padding: "40px 0", textAlign: "center", color: "var(--ink-40)", fontSize: 13 }}>
+              No payments recorded for this month
+            </div>
+          ) : (
+            <div style={{ display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap" }}>
+              {/* Legend — identity + amount, never color alone */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 190 }}>
+                {modes.map(m => (
+                  <div key={m.label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ width: 11, height: 11, borderRadius: 3, background: m.color, flexShrink: 0 }} />
+                    <span style={{ fontSize: 12.5, color: "var(--ink)", fontWeight: 600 }}>{m.label}</span>
+                    <span style={{ fontSize: 12.5, color: "var(--ink-60)" }}>
+                      {modeTotal > 0 ? Math.round((m.amount / modeTotal) * 100) : 0}% · {fmt(m.amount)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <svg width="170" height="170" viewBox="0 0 170 170" role="img" aria-label="Payment mode breakdown">
+                {segments.map(s => (
+                  <circle
+                    key={s.label}
+                    cx="85" cy="85" r={R}
+                    fill="none"
+                    stroke={s.color}
+                    strokeWidth="26"
+                    strokeDasharray={`${s.len} ${C - s.len}`}
+                    strokeDashoffset={-s.offset}
+                    transform="rotate(-90 85 85)"
+                  >
+                    <title>{`${s.label}: ${fmt(s.amount)}`}</title>
+                  </circle>
+                ))}
+              </svg>
+            </div>
+          )}
+        </div>
+
+        {/* Top 5 credit stores — single-hue bars (magnitude, one measure) */}
+        <div
+          onClick={onCreditClick}
+          style={{ background: "#fff", border: "1px solid var(--ink-10)", borderRadius: 12, padding: "16px 20px", cursor: "pointer" }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14 }}>
+            <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--ink)" }}>Top 5 credit stores</span>
+            <span style={{ fontSize: 12, color: "var(--ink-40)" }}>{MONTH_NAMES[month - 1]}</span>
+          </div>
+
+          {(r?.topCreditStores ?? []).length === 0 ? (
+            <div style={{ padding: "40px 0", textAlign: "center", color: "var(--ink-40)", fontSize: 13 }}>
+              No outstanding credit this month
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {(r?.topCreditStores ?? []).map(s => (
+                <div key={s.name} style={{ display: "flex", alignItems: "center", gap: 10 }} title={`${s.name}: ${fmt(s.amount)}`}>
+                  <span style={{
+                    width: 120, fontSize: 12, color: "var(--ink)", textAlign: "right",
+                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flexShrink: 0,
+                  }}>{s.name}</span>
+                  <div style={{ flex: 1, height: 18, background: "var(--ink-5)", borderRadius: 4, overflow: "hidden" }}>
+                    <div style={{
+                      width: `${(s.amount / maxCredit) * 100}%`, height: "100%",
+                      background: "#b91c1c", borderRadius: "0 4px 4px 0",
+                    }} />
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--ink)", width: 70, flexShrink: 0 }}>
+                    {fmt(s.amount)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const NetValueIcon  = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>;
 const CollectedIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>;
 

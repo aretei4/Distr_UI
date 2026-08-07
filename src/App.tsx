@@ -4,6 +4,7 @@ import Loader from "./components/Loader";
 import MainLayout from "./layout/MainLayout";
 import PrivateRoute from "./components/PrivateRoute";
 
+const Landing         = lazy(() => import("./pages/home/LandingPage"));
 const Login           = lazy(() => import("./pages/LoginPage"));
 const Home            = lazy(() => import("./pages/Home"));
 const Upload          = lazy(() => import("./pages/Upload"));
@@ -27,6 +28,7 @@ const DeliveryViolationPage = lazy(() => import("./pages/DeliveryViolationPage")
 const AssignmentPage        = lazy(() => import("./pages/AssignmentPage"));
 const DanReportPage         = lazy(() => import("./pages/DanReportPage"));
 const InvoiceReportPage     = lazy(() => import("./pages/InvoiceReportPage"));
+const MobileDanClosePage    = lazy(() => import("./pages/MobileDanClosePage")) as React.FC<{ standalone?: boolean }>;
 
 /**
  * ALL routes are always registered — no conditional route tree.
@@ -37,7 +39,12 @@ const App: React.FC = () => (
   <Suspense fallback={<Loader />}>
     <Routes>
       {/* Public */}
-      <Route path="/" element={<Login />} />
+      <Route path="/"      element={<Landing />} />
+      <Route path="/login" element={<Login />} />
+
+      {/* Mobile web view — PUBLIC, full screen, no sidebar/topbar chrome */}
+      <Route path="/m/dan-close"      element={<MobileDanClosePage standalone />} />
+      <Route path="/mobile-dan-close" element={<MobileDanClosePage standalone />} />
 
       {/* Protected — wrapped in MainLayout */}
       <Route element={<PrivateRoute><MainLayout /></PrivateRoute>}>

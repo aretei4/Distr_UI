@@ -1,0 +1,375 @@
+/* ── Mobile DAN Close — phone-shaped wizard ──────────────────────────────── */
+
+/* ── Standalone (real phone / webview) — full screen, no app chrome ─────── */
+.mdan-standalone-root {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #f4f2fb;
+}
+.mdan-phone.standalone {
+  max-width: 100%;
+  min-height: 100%;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+/* On tablets/desktop keep the readable phone width, centered */
+@media (min-width: 480px) {
+  .mdan-phone.standalone { max-width: 420px; min-height: 100vh; }
+}
+.mdan-phone.standalone .mdan-topbar {
+  position: sticky; top: 0; z-index: 10;
+}
+.mdan-phone.standalone .mdan-page { flex: 1; }
+.mdan-phone.standalone .mdan-bottom-bar {
+  position: sticky; bottom: 0; z-index: 10;
+  /* clear the iOS home indicator */
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+}
+/* 16px inputs stop iOS Safari from zooming on focus */
+.mdan-phone.standalone .mdan-amt-input,
+.mdan-phone.standalone .mdan-mode-panel input { font-size: 16px; }
+/* Bigger touch targets */
+.mdan-phone.standalone .mdan-row-edit-btn { padding: 6px 12px; font-size: 11px; }
+.mdan-phone.standalone .mdan-mode-edit-btn { padding: 7px 14px; }
+
+.mdan-phone {
+  max-width: 420px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 0 24px rgba(108, 63, 197, 0.08);
+  border: 1px solid #e8e4f4;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  font-size: 14px;
+  color: #1a1025;
+}
+
+/* ── Topbar ── */
+.mdan-topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px;
+  background: #fff;
+  border-bottom: 1px solid #e8e4f4;
+}
+.mdan-back-btn {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  border: 1px solid #e0d9f5;
+  background: #f4f2fb;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+}
+.mdan-back-btn svg { width: 16px; height: 16px; stroke: #6c3fc5; }
+.mdan-topbar-title { font-size: 13px; font-weight: 600; }
+.mdan-topbar-sub   { font-size: 11px; color: #888; margin-top: 1px; }
+
+/* ── Step indicator ── */
+.mdan-step-indicator {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: #faf9fd;
+  border-bottom: 1px solid #e8e4f4;
+}
+.mdan-dot-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.mdan-dot {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.mdan-dot.done   { background: #e6f9f0; color: #1a7a4a; }
+.mdan-dot.active { background: #6c3fc5; color: #fff; }
+.mdan-dot.idle   { background: #f4f2fb; border: 1px solid #d0c8ef; color: #a89ec8; }
+.mdan-dot-label  { font-size: 10px; color: #a89ec8; white-space: nowrap; text-align: center; }
+.mdan-dot-label.active { color: #6c3fc5; font-weight: 600; }
+.mdan-step-line { flex: 1; height: 1px; background: #e0d9f5; margin: 0 4px 16px; }
+.mdan-step-line.done { background: #1a7a4a; }
+
+/* ── Page body ── */
+.mdan-page { min-height: 360px; padding-bottom: 12px; }
+.mdan-step-heading    { padding: 16px 16px 4px; font-size: 15px; font-weight: 600; }
+.mdan-step-subheading { padding: 0 16px 14px; font-size: 12px; color: #666; }
+.mdan-empty { padding: 40px 16px; text-align: center; color: #a89ec8; font-size: 13px; }
+
+/* ── Step 1 — agent cards ── */
+.mdan-agent-card {
+  margin: 0 12px 10px;
+  background: #fff;
+  border: 1px solid #e0d9f5;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex; align-items: center; gap: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.mdan-agent-card.selected { border: 2px solid #6c3fc5; padding: 13px; }
+.mdan-agent-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: #ede9fb; color: #6c3fc5;
+  font-size: 12px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.mdan-agent-name  { font-size: 13px; font-weight: 600; }
+.mdan-agent-dan   { font-size: 11px; color: #6c3fc5; margin-top: 2px; }
+.mdan-date-label  { font-size: 10px; color: #999; }
+.mdan-date        { font-size: 12px; font-weight: 600; margin-top: 2px; }
+
+/* ── Step 2 — store return cards ── */
+.mdan-store-card {
+  margin: 0 12px 10px;
+  background: #fff;
+  border: 1px solid #e0d9f5;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.mdan-store-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 14px;
+  border-bottom: 1px solid #e8e4f4;
+}
+.mdan-store-num  { font-size: 13px; font-weight: 600; color: #6c3fc5; }
+.mdan-store-name { font-size: 13px; font-weight: 600; margin-left: 8px; }
+.mdan-badge-inv  {
+  font-size: 10px; padding: 2px 8px;
+  border-radius: 6px;
+  background: #ede9fb; color: #6c3fc5;
+  border: 1px solid #c4b5f4;
+  white-space: nowrap;
+}
+/* Per-store return subtotal, pinned to the bottom of each card */
+.mdan-store-total {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 14px;
+  border-top: 1px solid #e8e4f4;
+  background: #faf9fd;
+  font-size: 11.5px; color: #6b6b7b;
+}
+.mdan-store-total strong { font-size: 13px; color: #b3261e; }
+
+/* Whole-DAN return total, above the store cards */
+.mdan-return-total {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 4px 12px 10px;
+  padding: 11px 14px;
+  border: 1px solid #f3c2be;
+  border-radius: 12px;
+  background: #fdf1f0;
+  font-size: 12.5px; font-weight: 600; color: #8c2f28;
+}
+.mdan-return-total strong { font-size: 16px; color: #b3261e; }
+
+.mdan-ret-table { width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed; }
+.mdan-ret-table th {
+  text-align: left; font-size: 10px; color: #999; font-weight: 500;
+  padding: 6px 10px;
+  background: #faf9fd;
+  border-bottom: 1px solid #e8e4f4;
+  text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;
+}
+.mdan-ret-table td { padding: 7px 10px; border-bottom: 1px solid #f0edf9; vertical-align: middle; }
+.mdan-ret-table tr:last-child td { border-bottom: none; }
+.mdan-cell-view       { font-size: 11px; color: #1a1025; }
+.mdan-cell-view.empty { color: #bbb; }
+.mdan-row-edit-btn {
+  padding: 3px 8px; font-size: 10px;
+  border-radius: 6px;
+  border: 1px solid #e0d9f5;
+  background: #faf9fd; color: #666;
+  cursor: pointer; white-space: nowrap;
+}
+.mdan-row-edit-btn.editing { background: #ede9fb; color: #6c3fc5; border-color: #c4b5f4; }
+.mdan-edit-row td { padding: 8px 10px; background: #faf9fd; }
+.mdan-edit-wrap { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.mdan-amt-input {
+  flex: 1; min-width: 60px;
+  padding: 6px 8px; font-size: 11px;
+  border: 1px solid #d0c8ef;
+  border-radius: 6px;
+  background: #fff; color: #1a1025;
+}
+.mdan-amt-input::placeholder { color: #bbb; }
+.mdan-amt-save-btn {
+  padding: 6px 12px; border-radius: 6px;
+  background: #6c3fc5; color: #fff;
+  border: none; font-size: 11px; cursor: pointer; font-weight: 600;
+}
+.mdan-amt-del-btn {
+  padding: 6px 12px; border-radius: 6px;
+  background: #fff; color: #c0392b;
+  border: 1px solid #f5c6c6; font-size: 11px; cursor: pointer; font-weight: 600;
+}
+
+/* ── Step 3 — payment modes ── */
+.mdan-section-head {
+  font-size: 10px; font-weight: 600; color: #999;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 14px 16px 6px;
+}
+.mdan-mode-row {
+  margin: 0 12px 8px;
+  background: #fff;
+  border: 1px solid #e0d9f5;
+  border-radius: 12px; overflow: hidden;
+}
+.mdan-mode-main { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; }
+.mdan-mode-left { display: flex; align-items: center; gap: 10px; }
+.mdan-mode-icon {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.mdan-mode-icon.cash   { background: #e6f0fd; color: #185fa5; }
+.mdan-mode-icon.upi    { background: #e6f9f0; color: #1a7a4a; }
+.mdan-mode-icon.cheque { background: #fef4e4; color: #854f0b; }
+.mdan-mode-icon.neft   { background: #f0edf9; color: #6c3fc5; }
+.mdan-mode-name { font-size: 13px; font-weight: 600; }
+.mdan-mode-amt  { font-size: 13px; font-weight: 600; color: #6c3fc5; }
+.mdan-mode-edit-btn {
+  padding: 4px 10px; font-size: 11px;
+  border-radius: 6px; border: 1px solid #e0d9f5;
+  background: #faf9fd; color: #666; cursor: pointer;
+}
+.mdan-mode-panel {
+  padding: 10px 14px;
+  border-top: 1px solid #e8e4f4;
+  background: #faf9fd;
+  display: flex; align-items: center; gap: 8px;
+}
+.mdan-mode-panel input {
+  flex: 1; padding: 7px 10px; font-size: 12px;
+  border: 1px solid #d0c8ef; border-radius: 6px;
+  background: #fff; color: #1a1025;
+}
+.mdan-mode-save-btn {
+  padding: 7px 14px; border-radius: 6px;
+  background: #6c3fc5; color: #fff;
+  border: none; font-size: 12px; cursor: pointer; font-weight: 600;
+}
+
+/* ── Summary ── */
+.mdan-summary-block {
+  margin: 0 12px 12px;
+  background: #fff;
+  border: 1px solid #e0d9f5;
+  border-radius: 12px; overflow: hidden;
+}
+.mdan-summary-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 9px 14px;
+  border-bottom: 1px solid #f0edf9;
+  font-size: 12px;
+}
+.mdan-summary-row:last-child { border-bottom: none; }
+.mdan-summary-key { color: #666; }
+.mdan-summary-val { font-weight: 600; }
+.mdan-summary-row.credit-row { background: #fff0f0; }
+.mdan-credit-key { color: #c0392b; font-weight: 600; }
+.mdan-credit-val { font-weight: 600; color: #c0392b; }
+
+.mdan-approve-btn {
+  width: calc(100% - 24px);
+  margin: 0 12px 12px;
+  padding: 13px;
+  border-radius: 8px;
+  background: #6c3fc5; color: #fff;
+  border: none; font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.mdan-approve-btn.done { background: #e6f9f0; color: #1a7a4a; cursor: default; }
+.mdan-approve-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Bottom bar ── */
+.mdan-bottom-bar {
+  padding: 10px 16px;
+  background: #fff;
+  border-top: 1px solid #e8e4f4;
+  display: flex; gap: 10px;
+}
+.mdan-nav-btn {
+  flex: 1; padding: 11px;
+  border-radius: 8px; font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #e0d9f5;
+  background: #faf9fd; color: #666;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.mdan-nav-btn.primary { background: #6c3fc5; color: #fff; border: none; }
+.mdan-nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Edit payment modal ── */
+.mdan-modal-backdrop {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(26, 16, 37, 0.45);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+.mdan-modal {
+  width: 100%; max-width: 340px;
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  max-height: 88vh;
+  display: flex; flex-direction: column;
+}
+.mdan-modal-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 8px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e8e4f4;
+}
+.mdan-modal-title { font-size: 14px; font-weight: 700; color: #1a1025; }
+.mdan-modal-sub {
+  font-size: 11.5px; color: #888; margin-top: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.mdan-modal-close {
+  width: 28px; height: 28px; flex-shrink: 0;
+  border-radius: 8px; border: 1px solid #e0d9f5;
+  background: #f4f2fb; color: #6c3fc5;
+  font-size: 13px; cursor: pointer;
+}
+.mdan-modal-body { padding: 14px 16px; overflow-y: auto; }
+.mdan-field-label {
+  display: block;
+  font-size: 10.5px; font-weight: 600; color: #999;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  margin: 10px 0 4px;
+}
+.mdan-field-label:first-child { margin-top: 0; }
+.mdan-modal-input {
+  width: 100%;
+  padding: 9px 11px;
+  font-size: 16px;               /* 16px stops iOS zoom-on-focus */
+  border: 1px solid #d0c8ef; border-radius: 8px;
+  background: #fff; color: #1a1025;
+  box-sizing: border-box;
+}
+.mdan-modal-foot {
+  display: flex; gap: 10px;
+  padding: 12px 16px;
+  border-top: 1px solid #e8e4f4;
+}
+
+.mdan-error {
+  margin: 0 12px 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: #fff0f0; border: 1px solid #f5c6c6;
+  color: #c0392b; font-size: 12px;
+}

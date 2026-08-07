@@ -1,6 +1,6 @@
 import '../styles/pages/SalesTable.css';
 import React, { useEffect, useState, useMemo } from "react";
-import { ApiEndpoints } from "../constants/config";
+import { fetchSales, deleteSalesByDire } from "../services/salesService";
 import { useNavigate } from "react-router-dom";
 import { PageHeader, DataTable, TR, TD, SearchInput, Btn } from "../components/ui";
 
@@ -34,8 +34,7 @@ const SalesTable: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch(ApiEndpoints.SALES)
-      .then(r => r.json())
+    fetchSales()
       .then(data => { setSales(data); setFiltered(data); })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -75,15 +74,12 @@ const SalesTable: React.FC = () => {
   const handleDelete = () => {
     if (!selected.length) return;
     if (!confirm(`Delete ${selected.length} selected row(s)?`)) return;
-    fetch(ApiEndpoints.SALES_DELETE_BY_DIRE, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(selected),
-    }).then(r => {
-      if (!r.ok) throw new Error();
-      setSales(p => p.filter(s => !selected.includes(s.direId)));
-      setSelected([]);
-    }).catch(() => alert("Delete failed"));
+    deleteSalesByDire(selected)
+      .then(() => {
+        setSales(p => p.filter(s => !selected.includes(s.direId)));
+        setSelected([]);
+      })
+      .catch(() => alert("Delete failed"));
   };
 
   const handleNext = () => {

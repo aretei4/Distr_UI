@@ -1,7 +1,7 @@
 import '../styles/pages/DeliveryTable.css';
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ApiEndpoints } from "../constants/config";
+import { fetchAgentDeliveries, deleteDeliveryByDire, deleteDeliveryByPicklist } from "../services/salesService";
 import { PageHeader, DataTable, TR, TD, SearchInput, Btn, Card } from "../components/ui";
 
 interface DeliveryEntry {
@@ -36,8 +36,7 @@ const DeliveryTable: React.FC = () => {
 
   useEffect(() => {
     if (!agentId) return;
-    fetch(`${ApiEndpoints.DELIVERY_ASIGN_LIST}${agentId}`)
-      .then(r => r.json())
+    fetchAgentDeliveries(agentId)
       .then(res => {
         const norm = res.map((d: any) => ({ ...d, netValue: Number(d.netValue || 0) }));
         setData(norm); setFiltered(norm);
@@ -58,11 +57,8 @@ const DeliveryTable: React.FC = () => {
   const deleteRow = async (direId: number | undefined, picklistNo: string) => {
     if (!confirm("Delete this record?")) return;
     try {
-      const url = direId
-        ? ApiEndpoints.DELETE_DELIVERY_BY_DIRE(direId)
-        : `${ApiEndpoints.DELETE_DELIVERY}/${picklistNo}`;
-      const res = await fetch(url, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
+      if (direId) await deleteDeliveryByDire(direId);
+      else        await deleteDeliveryByPicklist(picklistNo);
       const updated = direId
         ? data.filter(d => d.direId !== direId)
         : data.filter(d => d.picklistNo !== picklistNo);

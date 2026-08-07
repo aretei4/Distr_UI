@@ -1,14 +1,12 @@
 import '../styles/pages/MapPage.css';
 import React, { useEffect, useRef, useState } from "react";
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow, Polyline } from "@react-google-maps/api";
-import { fetchMapPoints, assignRoute, MapPoint } from "../services/MapService";
-import { ApiEndpoints } from "../constants/config";
-import { authHeaders } from "../services/authService";
+import { fetchMapPoints, assignRoute, fetchWarehouses, MapPoint, Warehouse } from "../services/MapService";
+import { fetchDeliveryAgents } from "../services/DeliveryService";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string;
 
-interface Agent     { id: number; name: string; }
-interface Warehouse { id: number; name: string; address: string; lat: number; lon: number; }
+interface Agent { id: number; name: string; }
 
 const mapContainerStyle = { width: "100%", height: "100%" };
 const bbsrCenter        = { lat: 20.3010, lng: 85.8240 };
@@ -67,14 +65,12 @@ const MapPage: React.FC = () => {
   // ── Bootstrap ───────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    fetch(ApiEndpoints.DELIVERY_AGENTS, { headers: { ...authHeaders() } })
-      .then(r => r.json())
+    fetchDeliveryAgents()
       .then((d: any[]) => setAgents(d.map(a => ({ id: a.id, name: a.name }))))
       .catch(console.error);
 
-    fetch(ApiEndpoints.WAREHOUSES, { headers: { ...authHeaders() } })
-      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-      .then((d: Warehouse[]) => setWarehouses(Array.isArray(d) ? d : []))
+    fetchWarehouses()
+      .then(d => setWarehouses(Array.isArray(d) ? d : []))
       .catch(console.error);
   }, []);
 

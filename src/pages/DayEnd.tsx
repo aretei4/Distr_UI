@@ -3,8 +3,9 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import type { DayEndRecord, ToastState } from "./types";
 import { fetchDayEndSummary, approveDayEnd, rejectDayEnd } from "../services/dayEndService";
-import { ApiEndpoints, getCompanyInfo } from "../constants/config";
-import { authHeaders, authService } from "../services/authService";
+import { getCompanyInfo } from "../constants/config";
+import { authService } from "../services/authService";
+import { updatePicklist, deletePicklist, fetchPicklistsByDayend } from "../services/danService";
 import {
   PageHeader, Card, DataTable, TR, TD, StatusBadge,
   SearchInput, Select, Btn, Toast,
@@ -338,20 +339,12 @@ function EditPicklistModal({
     setSaving(true); setError("");
     const paymentModeJson = delivered ? buildPaymentModeJson() : null;
     try {
-      const res = await fetch(ApiEndpoints.UPDATE_PICKLIST(picklist.direId!), {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", ...authHeaders() },
-        body: JSON.stringify({
-          delivered,
-          paymentAmount: delivered ? totalPayment : 0,
-          paymentMode:   paymentModeJson,
-          reason:        reason.trim() || null,
-        }),
+      await updatePicklist(picklist.direId!, {
+        delivered,
+        paymentAmount: delivered ? totalPayment : 0,
+        paymentMode:   paymentModeJson,
+        reason:        reason.trim() || null,
       });
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        throw new Error(body?.message ?? "Failed to save");
-      }
       onSaved({
         ...picklist,
         delivered,
@@ -636,11 +629,7 @@ function DeleteConfirmModal({
   const confirm = async () => {
     setLoading(true); setError("");
     try {
-      const res = await fetch(ApiEndpoints.DELETE_PICKLIST(direId), {
-        method: "DELETE",
-        headers: authHeaders(),
-      });
-      if (!res.ok) throw new Error("Delete failed");
+      await deletePicklist(direId);
       onDeleted();
     } catch {
       setError("Failed to delete. Please try again.");
@@ -898,8 +887,7 @@ function PicklistRow({
 
   const load = useCallback(() => {
     setLoading(true); setError("");
-    fetch(ApiEndpoints.PICKLISTS_BY_AGENT(dayendId), { headers: authHeaders() })
-      .then(r => r.ok ? r.json() : Promise.reject("Failed"))
+    fetchPicklistsByDayend(dayendId)
       .then((data: Picklist[]) => { setItems(data); setLoading(false); })
       .catch(() => { setError("Could not load picklists"); setLoading(false); });
   }, [dayendId]);

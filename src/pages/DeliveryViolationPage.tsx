@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
-import { ApiEndpoints } from "../constants/config";
-import { authHeaders } from "../services/authService";
+import { fetchViolationRows } from "../services/DeliveryService";
 import { CustomerService } from "../services/customerService";
 
 /* ── helpers ─────────────────────────────────────────────────── */
@@ -116,8 +115,7 @@ const DeliveryViolationPage: React.FC = () => {
   /* ── load ── */
   const load = useCallback(() => {
     setLoading(true); setError(""); setMapKey(null); setActiveRow(null); setPickMode("idle");
-    fetch(`${ApiEndpoints.VIOLATION_ROWS}?fromDate=${fromDate}&toDate=${toDate}`, { headers: authHeaders() })
-      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+    fetchViolationRows(fromDate, toDate)
       .then((rows: Omit<ViolationRow,"dist">[]) =>
         setData((Array.isArray(rows) ? rows : []).map(r => ({
           ...r,

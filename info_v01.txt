@@ -17,7 +17,7 @@ lsof -i :8080
 
 
 ssh -i tomcat ubuntu@device4autism.in
-scp -i tomcat -r "D:\project\distributor\setup\direcon\nginx\trail1.device4autism.in.conf" ubuntu@device4autism.in:/home/ubuntu/temp
+scp -i tomcat -r "D:\project\distributor\setup\direcon\nginx\direco.co.in.conf" ubuntu@direco.co.in:/home/ubuntu/temp
 scp -i tomcat -r "D:\project\claude\device4autism\dist" ubuntu@device4autism.in:/home/ubuntu/direcon
 scp -i tomcat "D:\project\distributor\wsp\qualcy_jwt\target\distr.jar" ubuntu@device4autism.in:/home/ubuntu/direcon/app/app.jar
 scp -i tomcat -r "D:\project\claude\device4autism\direcon" ubuntu@device4autism.in:/home/ubuntu/direcon

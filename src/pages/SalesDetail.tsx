@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ApiEndpoints } from "../constants/config";
+import { fetchDeliveryAgents } from "../services/DeliveryService";
+import { assignDelivery, pendingDanCheck } from "../services/salesService";
 import { PageHeader, DataTable, TR, TD, Btn, Card, Field, TextInput } from "../components/ui";
 
 interface SalesEntry { direId?: number; invoiceNo?: string; salesOrderNo?: string; picklistNo: string; custDesc: string; netValue: number; }
@@ -22,8 +23,7 @@ const SalesDetail: React.FC = () => {
   const [boyId, setBoyId]               = useState<number | null>(null);
 
   useEffect(() => {
-    fetch(ApiEndpoints.DELIVERY_AGENTS)
-      .then(r => r.json())
+    fetchDeliveryAgents()
       .then(setDeliveryList)
       .catch(() => setDeliveryList([
         { id: 30, name: "Anil Patra", contact: "9988776655" },
@@ -41,8 +41,7 @@ const SalesDetail: React.FC = () => {
 
     // Check for pending DANs before dispatching
     try {
-      const check = await fetch(ApiEndpoints.PENDING_DAN_CHECK);
-      const checkJson = await check.json();
+      const checkJson = await pendingDanCheck();
       if (!checkJson.success) {
         alert("⚠️ Cannot dispatch: " + checkJson.message);
         return;
@@ -54,11 +53,7 @@ const SalesDetail: React.FC = () => {
     const payload: any = { deliveryBoyId: boyId, picklistNos, direIds };
     if (carNo || driverName || mobile) payload.car = { carNo, driverName, mobile };
     try {
-      const res = await fetch(ApiEndpoints.DELIVERY_ASIGN, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error();
+      await assignDelivery(payload);
       alert("✅ Delivery assigned successfully");
       navigate("/agents");
     } catch { alert("❌ Assignment failed"); }

@@ -1,6 +1,6 @@
 import '../styles/pages/Upload.css';
 import React, { useEffect, useState, useRef } from "react";
-import { ApiEndpoints } from "../constants/config";
+import { fetchTemplateCompanies, fetchTemplatesByCompany, uploadSalesFile } from "../services/template.service";
 import { PageHeader, Card, Btn, Select, Field, Toast } from "../components/ui";
 
 interface ExcelTemplate {
@@ -53,9 +53,8 @@ const Upload: React.FC = () => {
 
   // Load companies on mount
   useEffect(() => {
-    fetch(ApiEndpoints.TEMPLATE_COMPANIES)
-      .then(r => r.ok ? r.json() : [])
-      .then((data: string[]) => setCompanies(data))
+    fetchTemplateCompanies()
+      .then((data: string[]) => setCompanies(data ?? []))
       .catch(() => {});
   }, []);
 
@@ -66,9 +65,8 @@ const Upload: React.FC = () => {
     setTemplateType("");
     setSelected(null);
     setFile(null);
-    fetch(ApiEndpoints.TEMPLATES_BY_COMPANY(companyName))
-      .then(r => r.ok ? r.json() : [])
-      .then((data: ExcelTemplate[]) => setTemplates(data))
+    fetchTemplatesByCompany(companyName)
+      .then((data: ExcelTemplate[]) => setTemplates(data ?? []))
       .catch(() => {});
   }, [companyName]);
 
@@ -108,21 +106,16 @@ const Upload: React.FC = () => {
     formData.append("type", selected.templateName);   // e.g. "Devine Distributors_sales"
     try {
       setIsUploading(true);
-      const res = await fetch(ApiEndpoints.UPLOAD, { method: "POST", body: formData });
-      const data = await res.json();
-      if (res.ok) {
-        if (data.errors?.length > 0) {
-          setErrors(data.errors);
-          setMessage({ text: `Uploaded with ${data.errors.length} validation error(s).`, type: "error" });
-        } else {
-          setMessage({ text: "File uploaded and processed successfully!", type: "success" });
-          setFile(null);
-        }
+      const data = await uploadSalesFile(formData);
+      if (data?.errors?.length > 0) {
+        setErrors(data.errors);
+        setMessage({ text: `Uploaded with ${data.errors.length} validation error(s).`, type: "error" });
       } else {
-        setMessage({ text: data.message ?? "Server returned an error.", type: "error" });
+        setMessage({ text: "File uploaded and processed successfully!", type: "success" });
+        setFile(null);
       }
-    } catch {
-      setMessage({ text: "Could not reach server. Check your connection.", type: "error" });
+    } catch (e: any) {
+      setMessage({ text: e?.message ?? "Could not reach server. Check your connection.", type: "error" });
     } finally {
       setIsUploading(false);
     }

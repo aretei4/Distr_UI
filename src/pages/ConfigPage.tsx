@@ -1,8 +1,7 @@
 import '../styles/pages/ConfigPage.css';
 import React, { useEffect, useState, useCallback } from "react";
 import { PageHeader, Card, Toast } from "../components/ui";
-import { ApiEndpoints } from "../constants/config";
-import { authService } from "../services/authService";
+import { fetchFeatureFlags, toggleFeature } from "../services/configService";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -13,13 +12,6 @@ interface FeatureFlag {
   description: string;
   category: string;
   updatedAt: string | null;
-}
-
-// ── Auth helpers ──────────────────────────────────────────────────────────────
-
-function authHeaders(): Record<string, string> {
-  const token = authService.getToken?.() ?? localStorage.getItem("token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 // ── Category icon map ─────────────────────────────────────────────────────────
@@ -242,11 +234,7 @@ const ConfigPage: React.FC = () => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(ApiEndpoints.FEATURE_FLAGS, {
-        headers: { ...authHeaders(), "Content-Type": "application/json" },
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data: FeatureFlag[] = await res.json();
+      const data: FeatureFlag[] = await fetchFeatureFlags();
       setFeatures(Array.isArray(data) ? data : []);
     } catch (err) {
       showToast("Failed to load feature configuration", "error");
@@ -266,13 +254,7 @@ const ConfigPage: React.FC = () => {
     setFeatures(prev => prev.map(f => f.key === key ? { ...f, enabled } : f));
     setSavingKey(key);
     try {
-      const res = await fetch(ApiEndpoints.FEATURE_TOGGLE(key), {
-        method: "PUT",
-        headers: { ...authHeaders(), "Content-Type": "application/json" },
-        body: JSON.stringify({ enabled }),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const updated: FeatureFlag = await res.json();
+      const updated: FeatureFlag = await toggleFeature(key, enabled);
       // Sync with server response (picks up updatedAt)
       setFeatures(prev => prev.map(f => f.key === key ? updated : f));
       const label = features.find(f => f.key === key)?.label ?? key;

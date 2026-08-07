@@ -76,6 +76,7 @@ export const ApiEndpoints = {
   TEMPLATES_BY_COMPANY: (company: string) => `${getApiBaseUrl()}/template/by-company/${encodeURIComponent(company)}`,
   get DELIVERY_DASHBOARD()   { return `${getApiBaseUrl()}/dashboard/delivery-summary`; },
   get OVERALL_SUMMARY()      { return `${getApiBaseUrl()}/dashboard/overall-summary`; },
+  get OVERALL_REPORT()       { return `${getApiBaseUrl()}/dashboard/overall-report`; },
   get DELIVERY_STATUS()      { return `${getApiBaseUrl()}/dashboard/delivery-summary`; },
   get DAY_END_SUMMARY()      { return `${getApiBaseUrl()}/dayend/dayEndSummery`; },
   get DAY_END_APPROVE()      { return `${getApiBaseUrl()}/dayend/approve`; },
@@ -95,6 +96,14 @@ export const ApiEndpoints = {
   get FEATURE_SAVE_ALL()     { return `${getApiBaseUrl()}/config/features/save-all`; },
   // Company search always uses the default URL (called before a company is selected)
   COMPANY_SEARCH:      (q: string) => `${DEFAULT_API_BASE_URL}/company/search?q=${encodeURIComponent(q)}`,
+
+  // Mobile DAN close (3-step wizard)
+  get MOBILE_DAN_OPEN_LIST()        { return `${getApiBaseUrl()}/mobile/dan/open-list`; },
+  MOBILE_DAN_INVOICES: (danId: number) => `${getApiBaseUrl()}/mobile/dan/${danId}/invoices`,
+  MOBILE_DAN_PAYMENT_SUMMARY: (danId: number) => `${getApiBaseUrl()}/mobile/dan/${danId}/payment-summary`,
+  MOBILE_DAN_PAYMENT_DETAIL:  (danId: number) => `${getApiBaseUrl()}/mobile/dan/${danId}/payment-detail`,
+  MOBILE_DAN_STOREKEEPER_APPROVE: (danId: number) => `${getApiBaseUrl()}/mobile/dan/${danId}/storekeeper-approve`,
+  MOBILE_DAN_ACCOUNTS_APPROVE:    (danId: number) => `${getApiBaseUrl()}/mobile/dan/${danId}/accounts-approve`,
 
   // DAN Close
   get DAN_LIST()                    { return `${getApiBaseUrl()}/dan/list`; },

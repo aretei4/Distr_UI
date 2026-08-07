@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { ApiEndpoints } from "../constants/config";
-import { authHeaders } from "../services/authService";
+import { fetchDeliveryAgents } from "../services/DeliveryService";
+import { fetchDanReport, fetchDanReportDetail } from "../services/danService";
 import { PageHeader, DataTable, TR, TD, Btn, Select } from "../components/ui";
 
 /* ── Types ─────────────────────────────────────────────────────── */
@@ -291,21 +291,18 @@ const DanReportPage: React.FC = () => {
   const [agentFilter, setAgentFilter] = useState("all");
 
   useEffect(() => {
-    fetch(ApiEndpoints.DELIVERY_AGENTS, { headers: authHeaders() })
-      .then(r => r.json())
+    fetchDeliveryAgents()
       .then(list => setAgents(list.map((a: any) => ({ id: a.id, name: a.name }))))
       .catch(() => {});
   }, []);
 
   const load = useCallback(() => {
     setLoading(true);
-    const params = new URLSearchParams();
-    if (fromDate)              params.set("fromDate", isoToDMY(fromDate));
-    if (toDate)                params.set("toDate",   isoToDMY(toDate));
-    if (agentFilter !== "all") params.set("agentId", agentFilter);
-    const qs = params.toString();
-    fetch(`${ApiEndpoints.DAN_REPORT}${qs ? `?${qs}` : ""}`, { headers: authHeaders() })
-      .then(r => r.json())
+    fetchDanReport({
+      fromDate: fromDate ? isoToDMY(fromDate) : undefined,
+      toDate:   toDate   ? isoToDMY(toDate)   : undefined,
+      agentId:  agentFilter !== "all" ? agentFilter : undefined,
+    })
       .then(data => setRows(Array.isArray(data) ? data : []))
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -314,8 +311,7 @@ const DanReportPage: React.FC = () => {
   useEffect(() => { load(); }, [load]);
 
   const openDetail = (danId: number) => {
-    fetch(ApiEndpoints.DAN_REPORT_DETAIL(danId), { headers: authHeaders() })
-      .then(r => r.json())
+    fetchDanReportDetail(danId)
       .then(d => { if (d && !d.error) setDetail(d); })
       .catch(() => {});
   };

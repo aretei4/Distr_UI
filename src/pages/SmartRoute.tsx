@@ -3,17 +3,15 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   GoogleMap, useJsApiLoader, Marker, InfoWindow, Polyline,
 } from "@react-google-maps/api";
-import { fetchMapPoints, MapPoint } from "../services/MapService";
-import { ApiEndpoints } from "../constants/config";
-import { authHeaders } from "../services/authService";
+import { fetchMapPoints, assignRoute, fetchWarehouses, MapPoint, Warehouse } from "../services/MapService";
+import { fetchDeliveryAgents } from "../services/DeliveryService";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string;
 
 // RoutePoint is just MapPoint — net_value is now part of the base interface
 type RoutePoint = MapPoint;
 
-interface Agent     { id: number; name: string; }
-interface Warehouse { id: number; name: string; address: string; lat: number; lon: number; active?: boolean; }
+interface Agent { id: number; name: string; }
 
 // ── Maths ──────────────────────────────────────────────────────────────────────
 
@@ -161,13 +159,11 @@ const SmartRoute: React.FC = () => {
   // ── Load agents + warehouses ──────────────────────────────────────────────
 
   useEffect(() => {
-    fetch(ApiEndpoints.DELIVERY_AGENTS, { headers: { ...authHeaders() } })
-      .then(r => r.json())
+    fetchDeliveryAgents()
       .then((d: any[]) => setAgents(d.map(a => ({ id: a.id, name: a.name }))))
       .catch(console.error);
 
-    fetch(ApiEndpoints.WAREHOUSES, { headers: { ...authHeaders() } })
-      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+    fetchWarehouses()
       .then((d: Warehouse[]) => {
         const list = Array.isArray(d) ? d : [];
         setWarehouses(list);
@@ -258,16 +254,10 @@ const SmartRoute: React.FC = () => {
     setAssigning(true);
     setAssignError("");
     try {
-      const payload = route.map((p, i) => ({
+      await assignRoute(route.map((p, i) => ({
         direId:   Number(p.picklist_no),
         sequence: i + 1,
-      }));
-      const res = await fetch(ApiEndpoints.SMART_ROUTE_ASSIGN, {
-        method:  "POST",
-        headers: { "Content-Type": "application/json", ...authHeaders() },
-        body:    JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      })));
       setAssignSuccess(true);
     } catch (e) {
       setAssignError(e instanceof Error ? e.message : "Assignment failed");

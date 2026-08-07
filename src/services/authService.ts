@@ -35,6 +35,32 @@ export const authService = {
     return user;
   },
 
+  /**
+   * Adopts a session handed off by the Android app: exchanges a one-time code
+   * (from ?code= in the URL) for the user details via /auth/web-session/{code}
+   * and stores them as the active session. Returns null if the code is
+   * invalid/expired — caller falls back to the normal login flow.
+   */
+  async adoptWebSession(code: string): Promise<AuthUser | null> {
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/auth/web-session/${code}`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (!data?.token) return null;
+      const user: AuthUser = {
+        token:    data.token,
+        userId:   Number(data.userId ?? 0),
+        username: data.username ?? "",
+        fullName: data.fullName ?? null,
+        role:     (data.role ?? "MANAGER") as AuthUser["role"],
+      };
+      localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+      return user;
+    } catch {
+      return null;
+    }
+  },
+
   logout() {
     localStorage.removeItem(AUTH_KEY);
     setCompanyBaseUrl(null);

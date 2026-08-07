@@ -113,13 +113,14 @@ interface FormState {
   username: string;
   fullName: string;
   email: string;
+  phone: string;
   role: UserRole;
   password: string;
   enabled: boolean;
 }
 
 const EMPTY_FORM: FormState = {
-  username: "", fullName: "", email: "",
+  username: "", fullName: "", email: "", phone: "",
   role: "STAFF", password: "", enabled: true,
 };
 
@@ -192,10 +193,15 @@ const UserForm: React.FC<{
           </Field>
         </div>
 
-        {/* Email */}
-        <Field label="Email">
-          <TextInput value={form.email} onChange={set("email")} placeholder="john@example.com" type="email" />
-        </Field>
+        {/* Row: Email + Phone */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          <Field label="Email">
+            <TextInput value={form.email} onChange={set("email")} placeholder="john@example.com" type="email" />
+          </Field>
+          <Field label="Phone">
+            <TextInput value={form.phone} onChange={set("phone")} placeholder="10-digit mobile" />
+          </Field>
+        </div>
 
         {/* Row: Role + Status */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
@@ -302,7 +308,8 @@ const UsersPage: React.FC = () => {
     const q = search.toLowerCase();
     const matchSearch = !q || u.username.toLowerCase().includes(q)
       || (u.fullName ?? "").toLowerCase().includes(q)
-      || (u.email ?? "").toLowerCase().includes(q);
+      || (u.email ?? "").toLowerCase().includes(q)
+      || (u.phone ?? "").toLowerCase().includes(q);
     const matchRole = roleFilter === "ALL" || u.role === roleFilter;
     return matchSearch && matchRole;
   });
@@ -330,6 +337,7 @@ const UsersPage: React.FC = () => {
         password: form.password,
         fullName: form.fullName.trim(),
         email: form.email.trim(),
+        phone: form.phone.trim(),
         role: form.role,
       };
       await userService.create(payload);
@@ -356,6 +364,7 @@ const UsersPage: React.FC = () => {
       await userService.update(editUser.id, {
         fullName: form.fullName.trim(),
         email:    form.email.trim() || undefined,
+        phone:    form.phone.trim() || undefined,
         role:     form.role,
         enabled:  form.enabled,
         password: form.password || undefined,
@@ -439,7 +448,7 @@ const UsersPage: React.FC = () => {
 
       {/* ── Table ── */}
       <DataTable
-        headers={["User", "Username", "Email", "Role", "Status", "Created", ...(isAdmin ? ["Actions"] : [])]}
+        headers={["User", "Username", "Email", "Phone", "Role", "Status", "Created", ...(isAdmin ? ["Actions"] : [])]}
         empty={!loading && filtered.length === 0}
         emptyText={search || roleFilter !== "ALL" ? "No users match your filters" : "No users found"}
         loading={loading}
@@ -472,6 +481,7 @@ const UsersPage: React.FC = () => {
             </TD>
             <TD><code style={{ fontSize: 12.5, color: "var(--ink-80)" }}>{user.username}</code></TD>
             <TD style={{ color: "var(--ink-60)" }}>{user.email ?? "—"}</TD>
+            <TD style={{ color: "var(--ink-60)", whiteSpace: "nowrap" }}>{user.phone || "—"}</TD>
             <TD><RoleBadge role={user.role} /></TD>
             <TD><ActiveBadge enabled={user.enabled} /></TD>
             <TD style={{ fontSize: 12.5, color: "var(--ink-40)" }}>
@@ -529,6 +539,7 @@ const UsersPage: React.FC = () => {
             username: editUser.username,
             fullName: editUser.fullName ?? "",
             email:    editUser.email ?? "",
+            phone:    editUser.phone ?? "",
             role:     editUser.role,
             password: "",
             enabled:  editUser.enabled,

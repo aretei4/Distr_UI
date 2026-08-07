@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { fetchDeliveryAgents } from "../services/DeliveryService";
 import { getApiBaseUrl } from "../constants/config";
-import { authHeaders } from "../services/authService";
+import { api } from "../services/apiClient";
 import {
   PageHeader, DataTable, TR, TD, SearchInput,
   Btn, Field, TextInput, Select, Toast,
@@ -142,35 +142,26 @@ const AgentFormModal: React.FC<{
       const url = isEdit
         ? `${getApiBaseUrl()}/delivery/agent/${initialAgent!.id}`
         : `${getApiBaseUrl()}/delivery/agent`;
-      const method = isEdit ? "PUT" : "POST";
+      const payload = {
+        name:          form.name.trim(),
+        contact:       form.contact.trim(),
+        altContact:    form.altContact.trim() || null,
+        address1:      form.address1.trim() || null,
+        address2:      form.address2.trim() || null,
+        address3:      form.address3.trim() || null,
+        city:          form.city.trim() || null,
+        pinCode:       form.pinCode.trim() || null,
+        fatherName:    form.fatherName.trim() || null,
+        aadharNo:      form.aadharNo.trim() || null,
+        panCard:       form.panCard.trim().toUpperCase() || null,
+        bankAccount:   form.bankAccount.trim() || null,
+        dateOfJoining: form.dateOfJoining || null,
+      };
 
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json", ...authHeaders() },
-        body: JSON.stringify({
-          name:          form.name.trim(),
-          contact:       form.contact.trim(),
-          altContact:    form.altContact.trim() || null,
-          address1:      form.address1.trim() || null,
-          address2:      form.address2.trim() || null,
-          address3:      form.address3.trim() || null,
-          city:          form.city.trim() || null,
-          pinCode:       form.pinCode.trim() || null,
-          fatherName:    form.fatherName.trim() || null,
-          aadharNo:      form.aadharNo.trim() || null,
-          panCard:       form.panCard.trim().toUpperCase() || null,
-          bankAccount:   form.bankAccount.trim() || null,
-          dateOfJoining: form.dateOfJoining || null,
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => null);
-        throw new Error(err?.error ?? err?.message ?? (isEdit ? "Failed to update agent" : "Failed to create agent"));
-      }
-      const saved: DeliveryAgent = await res.json().catch(() => ({
-        ...(initialAgent ?? {}), id: initialAgent?.id ?? Date.now(), ...form,
-      }));
+      const saved: DeliveryAgent = (isEdit
+        ? await api.put<DeliveryAgent>(url, payload)
+        : await api.post<DeliveryAgent>(url, payload))
+        ?? ({ ...(initialAgent ?? {}), id: initialAgent?.id ?? Date.now(), ...form } as DeliveryAgent);
       onSaved(saved);
     } catch (err) {
       setError(err instanceof Error ? err.message : (isEdit ? "Failed to update agent" : "Failed to create agent"));

@@ -1,11 +1,18 @@
 import { ApiEndpoints } from "../constants/config";
+import { api } from "./apiClient";
 
 export const saveTemplate = async (payload: any) => {
-  const response = await fetch(ApiEndpoints.SAVE_TEMPLATE, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  if (!response.ok) throw new Error("Failed to save template");
-  return response.json();
+  return api.post<any>(ApiEndpoints.SAVE_TEMPLATE, payload);
+};
+
+export const fetchTemplateCompanies = async (): Promise<any[]> => {
+  return api.get<any[]>(ApiEndpoints.TEMPLATE_COMPANIES);
+};
+
+export const fetchTemplatesByCompany = async (companyName: string): Promise<any[]> => {
+  return api.get<any[]>(ApiEndpoints.TEMPLATES_BY_COMPANY(companyName));
+};
+
+export const uploadSalesFile = async (form: FormData): Promise<any> => {
+  return api.postForm<any>(ApiEndpoints.UPLOAD, form);
 };

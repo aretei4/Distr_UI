@@ -1,5 +1,5 @@
 import { ApiEndpoints } from "../constants/config";
-import { authHeaders } from "./authService";
+import { api } from "./apiClient";
 
 export interface DeliverySummary {
   totalDeliveries:  number;
@@ -29,6 +29,22 @@ export interface OverallSummary {
   closedCollected: number;
 }
 
+export interface CreditStore { name: string; amount: number; }
+
+export interface OverallReport {
+  totalOrders:       number;
+  totalNetValue:     number;
+  totalCollected:    number;
+  outstandingCredit: number;
+  pendingStores:     number;
+  cashAmount:        number;
+  upiAmount:         number;
+  chequeAmount:      number;
+  neftAmount:        number;
+  creditAmount:      number;
+  topCreditStores:   CreditStore[];
+}
+
 export interface DeliveryDetails {
   id: number;
   customerName: string;
@@ -45,27 +61,23 @@ export interface DeliveryBoy {
 export async function getDeliverySummary(boyId: number | null): Promise<DeliverySummary> {
   let url = ApiEndpoints.DELIVERY_DASHBOARD;
   if (boyId !== null) url += `?boyId=${boyId}`;
-  const res = await fetch(url, { headers: authHeaders() });
-  if (!res.ok) throw new Error("Failed to fetch delivery summary");
-  return res.json();
+  return api.get<DeliverySummary>(url);
 }
 
 export async function getOverallSummary(boyId: number | null): Promise<OverallSummary> {
   let url = ApiEndpoints.OVERALL_SUMMARY;
   if (boyId !== null) url += `?boyId=${boyId}`;
-  const res = await fetch(url, { headers: authHeaders() });
-  if (!res.ok) throw new Error("Failed to fetch overall summary");
-  return res.json();
+  return api.get<OverallSummary>(url);
+}
+
+export async function getOverallReport(month: number, year: number): Promise<OverallReport> {
+  return api.get<OverallReport>(`${ApiEndpoints.OVERALL_REPORT}?month=${month}&year=${year}`);
 }
 
 export const fetchDeliveryAgents = async (): Promise<DeliveryBoy[]> => {
-  const res = await fetch(ApiEndpoints.DELIVERY_AGENTS, { headers: authHeaders() });
-  if (!res.ok) throw new Error("Failed to fetch delivery boys");
-  return res.json();
+  return api.get<DeliveryBoy[]>(ApiEndpoints.DELIVERY_AGENTS);
 };
 
 export async function getDeliveryDetails(status: string): Promise<DeliveryDetails[]> {
-  const res = await fetch(ApiEndpoints.DELIVERY_STATUS, { headers: authHeaders() });
-  if (!res.ok) throw new Error("Failed to fetch delivery details");
-  return res.json();
+  return api.get<DeliveryDetails[]>(ApiEndpoints.DELIVERY_STATUS);
 }

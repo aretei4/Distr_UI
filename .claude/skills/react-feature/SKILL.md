@@ -21,14 +21,18 @@ Never put everything in one page file. Each feature is split across:
 | Service | `src/services/<domain>Service.ts` | All `fetch()` calls as exported async functions returning typed promises |
 | Components | `src/components/` | Reusable pieces (used by 2+ pages) get their own file; page-local sub-components stay in the page file |
 
-Service function pattern (see `src/services/dashboardService.ts`):
+Service functions NEVER call `fetch` directly — they go through the common client
+`src/services/apiClient.ts` (`api.get/post/put/patch/del`), which injects the auth
+header, Content-Type, and centralised error handling (`ApiError` with status/body):
 ```ts
+import { api } from "./apiClient";
+
 export async function getFoo(param: string): Promise<Foo[]> {
-  const res = await fetch(`${ApiEndpoints.FOO}?p=${param}`, { headers: authHeaders() });
-  if (!res.ok) throw new Error("Failed to fetch foo");
-  return res.json();
+  return api.get<Foo[]>(`${ApiEndpoints.FOO}?p=${param}`);
 }
 ```
+Cross-cutting headers/params are added ONLY in `apiClient.buildHeaders`.
+(Exception: `authService.login` bootstraps the token, so it stays raw fetch.)
 
 ## Adding a new page
 
