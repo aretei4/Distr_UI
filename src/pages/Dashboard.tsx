@@ -6,6 +6,7 @@ import {
   getDeliverySummary, getOverallSummary, getOverallReport, fetchDeliveryAgents,
   DeliverySummary, OverallSummary, OverallReport, DeliveryBoy,
 } from "../services/dashboardService";
+import AgentTrackingTab from "./dashboard/AgentTrackingTab";
 
 const TEN_MINUTES = 10 * 60 * 1000;
 
@@ -87,7 +88,7 @@ function WideCard({
 
 /* ── Dashboard ───────────────────────────────────────────────────────────── */
 const Dashboard: React.FC = () => {
-  const [tab, setTab]               = useState<"today" | "overall">("today");
+  const [tab, setTab]               = useState<"today" | "overall" | "tracking">("today");
   const [summary, setSummary]       = useState<DeliverySummary | null>(null);
   const [overall, setOverall]       = useState<OverallSummary | null>(null);
   const [report,  setReport]        = useState<OverallReport | null>(null);
@@ -217,7 +218,7 @@ const Dashboard: React.FC = () => {
 
       {/* ── Tab pills ── */}
       <div style={{ display: "flex", gap: 4, marginBottom: 20 }}>
-        {(["today", "overall"] as const).map(t => (
+        {(["today", "overall", "tracking"] as const).map(t => (
           <button key={t} onClick={() => setTab(t)} style={{
             padding: "8px 20px", borderRadius: 8, border: "none", cursor: "pointer",
             fontWeight: 600, fontSize: 13, fontFamily: "'Inter', sans-serif",
@@ -225,10 +226,14 @@ const Dashboard: React.FC = () => {
             color: tab === t ? "#fff" : "var(--ink-60)",
             transition: "all 0.15s",
           }}>
-            {t === "today" ? "Today's performance" : "Overall summary"}
+            {t === "today" ? "Today's performance"
+              : t === "overall" ? "Overall summary"
+              : "Agent tracking"}
           </button>
         ))}
       </div>
+
+      {tab === "tracking" && <AgentTrackingTab />}
 
       {/* ── TODAY: stat cards + wide cards ── */}
       {isToday && (
@@ -258,7 +263,7 @@ const Dashboard: React.FC = () => {
       )}
 
       {/* ── OVERALL: monthly report from payment_details ── */}
-      {!isToday && (
+      {tab === "overall" && (
         <OverallReportView
           report={report}
           month={repMonth}

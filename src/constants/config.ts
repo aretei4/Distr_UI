@@ -112,4 +112,9 @@ export const ApiEndpoints = {
   DAN_RETURNS:      (direId: number) => `${getApiBaseUrl()}/dan/returns/dire/${direId}`,
   DAN_PAYMENT:      (id: number, direId: number) => `${getApiBaseUrl()}/dan/${id}/payment/dire/${direId}`,
   DAN_SUBMIT:       (id: number)    => `${getApiBaseUrl()}/dan/${id}/submit`,
+  DAN_APPROVAL:     (id: number)    => `${getApiBaseUrl()}/dan/${id}/approval`,
+
+  // Public landing-page enquiry form
+  get LEADS()        { return `${getApiBaseUrl()}/leads`; },
+  get LEADS_RECENT() { return `${getApiBaseUrl()}/leads/recent`; },
 };

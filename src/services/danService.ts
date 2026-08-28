@@ -51,6 +51,28 @@ export const fetchDanReport = async (params: { fromDate?: string; toDate?: strin
   return api.get<any[]>(`${ApiEndpoints.DAN_REPORT}${q ? `?${q}` : ""}`);
 };
 
+/** Storekeeper / accounts approval state for a DAN, from dan_approval_log. */
+export interface DanApprovalStatus {
+  danId:               number;
+  danStatus:           string;
+  storekeeperApproved: boolean;
+  storekeeperBy:       string | null;
+  storekeeperAt:       string | null;
+  accountsApproved:    boolean;
+  accountsBy:          string | null;
+  accountsAt:          string | null;
+  fullyApproved:       boolean;
+  pendingStage:        string | null;
+  trail: Array<{
+    stage: string; action: string; actionBy?: string | null;
+    actionByRole?: string | null; remarks?: string | null; createdAt?: string | null;
+  }>;
+}
+
+export const fetchDanApproval = async (danId: number): Promise<DanApprovalStatus> => {
+  return api.get<DanApprovalStatus>(ApiEndpoints.DAN_APPROVAL(danId));
+};
+
 /** DAN Close Report detail (invoice + payment breakdown). */
 export const fetchDanReportDetail = async (danId: number): Promise<any> => {
   return api.get<any>(ApiEndpoints.DAN_REPORT_DETAIL(danId));

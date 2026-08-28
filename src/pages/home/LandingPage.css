@@ -100,7 +100,22 @@
   transition:color .2s;
 }
 .direco-landing .nav-links a:hover{ color:var(--paper); }
-@media (max-width:720px){ .direco-landing .nav-links a:not(.btn){ display:none; } }
+
+/* Nav items that open the contact popup are <button>, styled to match the links */
+.direco-landing .nav-links .navlink{
+  font-family:var(--font-body);
+  font-size:0.88rem;
+  color:var(--paper-dim);
+  background:none; border:none; padding:0;
+  cursor:pointer;
+  transition:color .2s;
+}
+.direco-landing .nav-links .navlink:hover{ color:var(--paper); }
+
+@media (max-width:720px){
+  .direco-landing .nav-links a:not(.btn),
+  .direco-landing .nav-links .navlink{ display:none; }
+}
 
 .direco-landing .btn{
   font-family:var(--font-body);

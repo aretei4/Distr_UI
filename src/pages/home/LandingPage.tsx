@@ -1,5 +1,6 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import ContactModal from "./ContactModal";
 import "./LandingPage.css";
 
 /**
@@ -10,11 +11,13 @@ import "./LandingPage.css";
  * authenticated app — the one exception is the page background, which has to sit
  * on <body> to cover the viewport and is applied/removed by the effect below.
  *
- * Link policy: "Login" enters the app at /login; Product / How it works /
- * Integrations scroll to their in-page sections; "Request a demo" is inert until
- * a contact page exists.
+ * Link policy: "Login" is the only link that navigates — it enters the app at
+ * /login. Every other link opens the contact popup (ContactModal).
  */
 const LandingPage: React.FC = () => {
+  const [contactOpen, setContactOpen] = useState(false);
+  const openContact = () => setContactOpen(true);
+
   /* Dark page background + smooth anchor scrolling, reverted on unmount so the
      rest of the app keeps its own look. */
   useEffect(() => {
@@ -79,12 +82,12 @@ const LandingPage: React.FC = () => {
             <span className="sub">distributor&nbsp;to&nbsp;retail&nbsp;connect</span>
           </div>
           <div className="nav-links">
-            <a href="#product">Product</a>
-            <a href="#how">How it works</a>
-            <a href="#integrations">Integrations</a>
+            <button type="button" className="navlink" onClick={openContact}>Product</button>
+            <button type="button" className="navlink" onClick={openContact}>How it works</button>
+            <button type="button" className="navlink" onClick={openContact}>Integrations</button>
             {/* Styled as .btn so the mobile rule hiding plain nav links keeps it visible */}
             <Link to="/login" className="btn btn-ghost">Login</Link>
-            <button type="button" className="btn btn-primary">Request a demo</button>
+            <button type="button" className="btn btn-primary" onClick={openContact}>Request a demo</button>
           </div>
         </nav>
       </header>
@@ -103,8 +106,8 @@ const LandingPage: React.FC = () => {
                 distribution businesses actually move goods.
               </p>
               <div className="hero-cta">
-                <button type="button" className="btn btn-primary">Request a demo</button>
-                <a href="#how" className="btn btn-ghost">See how it works</a>
+                <button type="button" className="btn btn-primary" onClick={openContact}>Request a demo</button>
+                <button type="button" className="btn btn-ghost" onClick={openContact}>See how it works</button>
               </div>
               <div className="hero-note">No paper trail. No end-of-week surprises.</div>
             </div>
@@ -245,7 +248,7 @@ const LandingPage: React.FC = () => {
               <h2>Bring your distribution business online.</h2>
               <p>See Direco running on a real route — picklist to Day End settlement — in a 20-minute walkthrough.</p>
             </div>
-            <button type="button" className="btn btn-primary">Request a demo</button>
+            <button type="button" className="btn btn-primary" onClick={openContact}>Request a demo</button>
           </div>
         </section>
       </main>
@@ -255,10 +258,10 @@ const LandingPage: React.FC = () => {
           <div className="footer-row">
             <div className="wordmark">DIRECO<span className="dot">.</span></div>
             <div className="footer-links">
-              <a href="#product">Product</a>
-              <a href="#how">How it works</a>
-              <a href="#integrations">Integrations</a>
-              <button type="button" className="footer-link-btn">Request a demo</button>
+              <button type="button" className="footer-link-btn" onClick={openContact}>Product</button>
+              <button type="button" className="footer-link-btn" onClick={openContact}>How it works</button>
+              <button type="button" className="footer-link-btn" onClick={openContact}>Integrations</button>
+              <button type="button" className="footer-link-btn" onClick={openContact}>Request a demo</button>
               <Link to="/login">Login</Link>
             </div>
           </div>
@@ -267,6 +270,8 @@ const LandingPage: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />
     </div>
   );
 };

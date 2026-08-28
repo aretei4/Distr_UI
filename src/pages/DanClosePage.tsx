@@ -3,7 +3,9 @@ import React, { useState, useCallback, useEffect } from "react";
 import {
   fetchDanList, fetchReturnsByDire, saveReturnsByDire,
   fetchPicklistsByDayend, saveDanPayment, submitDan, updatePicklist,
+  fetchDanApproval,
 } from "../services/danService";
+import type { DanApprovalStatus } from "../services/danService";
 import { PageHeader, Btn } from "../components/ui";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -126,6 +128,78 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ fontSize: 18, fontWeight: 700, color: "var(--ink)", marginBottom: 4, fontFamily: "'Inter', sans-serif" }}>
       {children}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Approval status — storekeeper + accounts desks, from dan_approval_log
+═══════════════════════════════════════════════════════════════ */
+function ApprovalDesk({
+  label, approved, by, at, pending,
+}: { label: string; approved: boolean; by: string | null; at: string | null; pending: boolean }) {
+  const tone = approved
+    ? { bg: "#e6f9f0", border: "#a7e8c8", fg: "#1a7a4a", icon: "✓" }
+    : pending
+      ? { bg: "#fef9ec", border: "#fcd48a", fg: "#92610a", icon: "◷" }
+      : { bg: "var(--ink-5)", border: "var(--ink-10)", fg: "var(--ink-40)", icon: "○" };
+
+  return (
+    <div style={{
+      flex: "1 1 220px", display: "flex", alignItems: "flex-start", gap: 10,
+      background: tone.bg, border: `1px solid ${tone.border}`,
+      borderRadius: 9, padding: "9px 13px",
+    }}>
+      <span style={{ color: tone.fg, fontSize: 14, fontWeight: 700, lineHeight: 1.3 }}>{tone.icon}</span>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: tone.fg, textTransform: "uppercase", letterSpacing: ".04em" }}>
+          {label} — {approved ? "Approved" : pending ? "Awaiting approval" : "Not yet"}
+        </div>
+        <div style={{ fontSize: 11.5, color: "var(--ink-60)", marginTop: 2 }}>
+          {approved
+            ? <>by <strong>{by || "—"}</strong>{at ? ` · ${at}` : ""}</>
+            : <span style={{ color: "var(--ink-40)" }}>No entry in approval log</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Loads the DAN's approval state; null while loading or if the DAN has no id. */
+function useDanApproval(danId?: number) {
+  const [status, setStatus] = useState<DanApprovalStatus | null>(null);
+  useEffect(() => {
+    if (!danId) { setStatus(null); return; }
+    let live = true;
+    fetchDanApproval(danId)
+      .then(s => { if (live) setStatus(s); })
+      .catch(() => { if (live) setStatus(null); });
+    return () => { live = false; };
+  }, [danId]);
+  return status;
+}
+
+function ApprovalStatusBar({ status }: { status: DanApprovalStatus | null }) {
+  if (!status) return null;
+  const pending = (stage: string) =>
+    (status.pendingStage ?? "").toUpperCase() === stage;
+
+  return (
+    <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
+      <ApprovalDesk
+        label="Storekeeper"
+        approved={status.storekeeperApproved}
+        by={status.storekeeperBy}
+        at={status.storekeeperAt}
+        pending={pending("STOREKEEPER")}
+      />
+      <ApprovalDesk
+        label="Accounts"
+        approved={status.accountsApproved}
+        by={status.accountsBy}
+        at={status.accountsAt}
+        pending={pending("ACCOUNTS")}
+      />
     </div>
   );
 }
@@ -601,6 +675,7 @@ function Step2({ dan, initialRows, payments, onNext, onBack, onSaveClose }: { da
   );
   const picklistsWithDireId = dan.picklists.filter(p => p.direId);
   const [loading, setLoading] = useState(Object.keys(initialRows).length === 0 && picklistsWithDireId.length > 0);
+  const approval              = useDanApproval(dan._danId);
 
   /* Fetch previously saved returns — one call per picklist direId, merged */
   useEffect(() => {
@@ -777,6 +852,8 @@ function Step2({ dan, initialRows, payments, onNext, onBack, onSaveClose }: { da
           </div>
         )}
       </div>
+
+      <ApprovalStatusBar status={approval} />
 
       {dan.picklists.map(p => (
         <div key={p.no} style={{ border: "1px solid var(--ink-10)", borderRadius: 12, marginBottom: 16, overflow: "hidden" }}>
@@ -959,6 +1036,7 @@ function Step3({ dan, returns, initialPayments, onNext, onBack, onSaveClose }: {
   const [pay, setPay]         = useState<PaymentState>(emptyPay);
   const [editing, setEditing] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const approval              = useDanApproval(dan._danId);
 
   /* Always fetch fresh payment data from delivery_status via dayend API */
   useEffect(() => {
@@ -1028,9 +1106,11 @@ function Step3({ dan, returns, initialPayments, onNext, onBack, onSaveClose }: {
       )}
 
       <SectionTitle>Settle payment</SectionTitle>
-      <div style={{ fontSize: 13, color: "var(--ink-60)", marginBottom: 18 }}>
+      <div style={{ fontSize: 13, color: "var(--ink-60)", marginBottom: 14 }}>
         DAN: <strong style={{ color: "var(--brand)" }}>{dan.dan}</strong> · {dan.agent.name} · click Edit to enter payment per picklist
       </div>
+
+      <ApprovalStatusBar status={approval} />
 
       <div style={{ border: "1px solid var(--ink-10)", borderRadius: 12, overflow: "hidden", marginBottom: 20 }}>
         {/* Table */}
